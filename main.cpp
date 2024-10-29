@@ -1,35 +1,42 @@
 #include "soa_wrapper.h"
+#include "aos_wrapper.h"
 
 #include <iostream>
+#include <string>
 #include <vector>
 
 
-template <template <typename> typename F>
+template<template <std::size_t, class...> class F, class... Args>
 struct S {
-    F<int> x, y;
-    F<double> activation;
-    F<int> identifier;
+    F<0, int, Args...> x;
+    F<1, int, Args...> y;
+    F<2, double, Args...> activation;
+    F<3, std::string, Args...> identifier;
 };
 
-int main() {
-    soa_wrapper::soa_wrapper<std::vector, S> my_array;
-    my_array.x = {0, 1, 2, 3};
-    my_array.y = {0, -1, -2, -3};
-    my_array.activation = {0.0, 1.0, 2.0, 3.0};
-    my_array.identifier = {0, 1, 2, 3};
+template <std::size_t, class T>
+using my_vector = std::vector<T>;
 
-    for (int i = 0; i < 4; ++i) {
-        auto e = my_array[i];
-        e.x = i - 10;
-        e.y = i + 50;
-        e.activation = 0.5 * i;
-        e.identifier = i;
+int main() {
+    // aos_wrapper::aos_wrapper<my_vector, S> my_array(3);
+    soa_wrapper::soa_wrapper<my_vector, S> my_array(3);
+
+    // AoS access
+    for (int i = 0; i < 3; ++i) {
+        my_array[i].x = i - 10;
+        my_array[i].y = i + 50;
+        my_array[i].activation = 0.5 * i;
+        my_array[i].identifier = "foo" + std::to_string(i);
     }
 
-    my_array.y[2] = 42;
+    // SoA access
+    my_array.y[1] = 42;
+    my_array.identifier[2] = "bla";
 
-    for (int i = 0; i < 4; ++i) {
-        auto e = my_array[i];
-        std::cout << "Element " << i << ": {" << e.x << ", " << e.y << ", " << e.activation << ", " << e.identifier << "}" << std::endl;
+    for (int i = 0; i < 3; ++i) {
+        std::cout << "Element " << i << ": {"
+                << my_array[i].x << ", " << my_array[i].y << ", "
+                << my_array[i].activation << ", "
+                << my_array[i].identifier << "}" << std::endl;
     }
 }

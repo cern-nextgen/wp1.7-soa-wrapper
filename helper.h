@@ -3,6 +3,10 @@
 #include <utility>
 
 
+#ifndef HELPER_H
+#define HELPER_H
+
+
 namespace helper {
 
 namespace detail {
@@ -90,3 +94,5 @@ constexpr typename detail::enable_if_helper<T, S, 10>::type apply_to_members(T& 
 }
 
 }  // namespace helper
+
+#endif  // HELPER_H
