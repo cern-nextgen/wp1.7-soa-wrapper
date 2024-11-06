@@ -9,15 +9,18 @@
 
 namespace wrapper {
 
-template<template <std::size_t, class...> class F, template <template <std::size_t, class...> class> class S>
-concept memberfunction_concept = std::same_as<S<F>, S<aos::identity>> || std::same_as<S<F>, S<soa::reference>>;
-
 template<
-    template <std::size_t, class...> class F,
-    template <template <std::size_t, class...> class> class S,
-    template <template <std::size_t, class...> class, template <template <std::size_t, class...> class> class> class Layout
+    template <class> class F,
+    template <template <class> class> class S,
+    template <template <class> class, template <template <class> class> class> class Layout
 >
 using wrapper = Layout<F, S>;
+
+template<template <class> class F, template <template <class> class> class S>
+using aos = aos::aos<F, S>;
+
+template<template <class> class F, template <template <class> class> class S>
+using soa = soa::soa<F, S>;
 
 }  // namespace wrapper
 
