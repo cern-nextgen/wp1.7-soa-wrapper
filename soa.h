@@ -6,10 +6,10 @@
 
 namespace soa {
 
-template <std::size_t, typename T>
+template <typename T>
 using reference = T&;
 
-template <template <std::size_t, class> typename F, template <template <std::size_t, class> class> class S>
+template <template <class> typename F, template <template <class> class> class S>
 struct soa : public S<F> {
     using view_type = S<reference>;
     using data_type = S<F>;
