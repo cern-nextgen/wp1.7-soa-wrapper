@@ -1,4 +1,5 @@
-#include "wrapper.h"
+#include "wrapper_aos.h"
+#include "wrapper_soa.h"
 
 #include <iostream>
 #include <string>
@@ -20,7 +21,7 @@ struct S {
 };
 
 int main() {
-    wrapper::wrapper<std::vector, S, wrapper::soa> my_array(3);  // wrapper::aos
+    wrapper::wrapper<std::vector, S, wrapper::layout::soa> my_array(3);  // wrapper::layout::aos
 
     // AoS access
     for (int i = 0; i < 3; ++i) {

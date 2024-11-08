@@ -1,21 +1,22 @@
-#ifndef SOA_H
-#define SOA_H
+#ifndef WRAPPER_SOA_H
+#define WRAPPER_SOA_H
+
 
 #include "helper.h"
+#include "wrapper.h"
 
-
-namespace soa {
+namespace wrapper {
 
 template <typename T>
 using reference = T&;
 
-template <template <class> typename F, template <template <class> class> class S>
-struct soa : public S<F> {
+template <template <class> class F, template <template <class> class> class S>
+struct wrapper<F, S, layout::soa> : public S<F> {
     using view_type = S<reference>;
     using data_type = S<F>;
 
     template <class... Args>
-    soa(Args... args) {
+    wrapper(Args... args) {
         auto f = [args...](auto& member) -> decltype(auto) {
             member = std::remove_reference_t<decltype(member)>(args...);
             return member;
@@ -29,6 +30,6 @@ struct soa : public S<F> {
     }
 };
 
-}  // namespace soa
+}  // namespace wrapper
 
-#endif  // SOA_H
+#endif  // WRAPPER_SOA_H
