@@ -1,26 +1,16 @@
 #ifndef WRAPPER_H
 #define WRAPPER_H
 
-#include "aos.h"
-#include "soa.h"
-
-#include <concepts>
-
-
 namespace wrapper {
+
+enum class layout { aos = 0, soa = 1 };
 
 template<
     template <class> class F,
     template <template <class> class> class S,
-    template <template <class> class, template <template <class> class> class> class Layout
+    layout L
 >
-using wrapper = Layout<F, S>;
-
-template<template <class> class F, template <template <class> class> class S>
-using aos = aos::aos<F, S>;
-
-template<template <class> class F, template <template <class> class> class S>
-using soa = soa::soa<F, S>;
+struct wrapper;
 
 }  // namespace wrapper
 
