@@ -1,5 +1,4 @@
-#include "wrapper_aos.h"
-#include "wrapper_soa.h"
+#include "wrapper.h"
 
 #include <iostream>
 #include <string>
@@ -20,8 +19,11 @@ struct S {
     void setX(int x_new) { x = x_new; }
 };
 
+using wrapper_type = wrapper::wrapper<std::vector, S, wrapper::layout::soa>;
+S<wrapper::identity> eval_const_at(const wrapper_type& w, std::size_t i) { return w[i]; }
+
 int main() {
-    wrapper::wrapper<std::vector, S, wrapper::layout::soa> my_array(3);  // wrapper::layout::aos
+    wrapper_type my_array(3);
 
     // AoS access
     for (int i = 0; i < 3; ++i) {
@@ -31,19 +33,21 @@ int main() {
         my_array[i].identifier = "foo" + std::to_string(i);
     }
 
-    // print
+    // const_reference
     for (int i = 0; i < 3; ++i) {
+        S<wrapper::identity> r = my_array[i];
+        r.setX(42);
         std::cout << "Element " << i << ": {"
-                << my_array[i].x << ", " << my_array[i].y << ", {"
-                << my_array[i].activation.x << ", " << my_array[i].activation.y << "}, "
-                << my_array[i].identifier << "}" << std::endl;
+                << r.x << ", " << r.y << ", {"
+                << r.activation.x << ", " << r.activation.y << "}, "
+                << r.identifier << "}" << std::endl;
     }
 
     // member functions
     for (int i = 0; i < 3; ++i) {
-        my_array[i].setX(42);
-        std::cout << "my_array[" << i << "].getX()" << " == " << my_array[i].getX() << ", ";
-        std::cout << "my_array[" << i << "].abs2() == "<< my_array[i].abs2() << std::endl;
+        S<wrapper::identity> r = eval_const_at(my_array, i);
+        std::cout << "my_array[" << i << "].getX()" << " == " << r.getX() << ", ";
+        std::cout << "my_array[" << i << "].abs2() == "<< r.abs2() << std::endl;
     }
 
     return 0;
