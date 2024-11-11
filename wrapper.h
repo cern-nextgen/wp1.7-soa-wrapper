@@ -1,9 +1,34 @@
 #ifndef WRAPPER_H
 #define WRAPPER_H
 
+
+#include "helper.h"
+
+#include <cstddef>
+#include <iostream>
+
 namespace wrapper {
 
 enum class layout { aos = 0, soa = 1 };
+
+template <typename T>
+using identity = T;
+
+template <typename T>
+using reference = T&;
+
+template <typename T>
+using const_reference = const T&;
+
+template <template <class> class F_in, template <template <class> class> class S>
+struct proxy_type : S<F_in> {
+    constexpr static std::size_t M = helper::CountMembers<S<identity>>();
+    template<template <class> class F_out>
+    operator S<F_out>() const {
+        auto id = [](auto& member) -> decltype(auto) { return member; };
+        return helper::apply_to_members<M, S<F_in>, S<F_out>>(*this, id);
+    }
+};
 
 template<
     template <class> class F,
@@ -11,6 +36,53 @@ template<
     layout L
 >
 struct wrapper;
+
+template <template <class> class F, template <template <class> class> class S>
+struct wrapper<F, S, layout::aos> {
+    using value_type = S<identity>;
+    using array_type = F<value_type>;
+
+    constexpr static std::size_t M = helper::CountMembers<value_type>();
+
+    template <class... Args>
+    wrapper(Args... args) : data(args...) { }
+
+    array_type data;
+
+    proxy_type<reference, S> operator[](std::size_t i) {
+        auto id = [](auto& member) -> decltype(auto) { return member; };
+        return helper::apply_to_members<M, value_type&, proxy_type<reference, S>>(data[i], id);
+    }
+    proxy_type<const_reference, S> operator[](std::size_t i) const {
+        auto id = [](const auto& member) -> decltype(auto) { return member; };
+        return helper::apply_to_members<M, const value_type&, proxy_type<const_reference, S>>(data[i], id);
+    }
+};
+
+template <template <class> class F, template <template <class> class> class S>
+struct wrapper<F, S, layout::soa> {
+    using value_type = S<identity>;
+    using array_type = S<F>;
+
+    constexpr static std::size_t M = helper::CountMembers<value_type>();
+
+    template <class... Args>
+    wrapper(Args... args) {
+        auto f = [args...](auto member) -> decltype(auto) { return F<decltype(member)>(args...); };
+        data = helper::apply_to_members<M, value_type, array_type>(value_type(), f);
+    }
+
+    array_type data;
+
+    proxy_type<reference, S> operator[](std::size_t i) {
+        auto evaluate_at = [i](auto& member) -> decltype(auto) { return member[i]; };
+        return helper::apply_to_members<M, array_type&, proxy_type<reference, S>>(data, evaluate_at);
+    }
+    proxy_type<const_reference, S> operator[](std::size_t i) const {
+        auto evaluate_at = [i](const auto& member) -> decltype(auto) { return member[i]; };
+        return helper::apply_to_members<M, const array_type&, proxy_type<const_reference, S>>(data, evaluate_at);
+    }
+};
 
 }  // namespace wrapper
 
