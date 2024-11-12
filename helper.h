@@ -48,6 +48,15 @@ constexpr S apply_to_members(T t, Functor&& f) {
     } else if constexpr (M == 7) {
         auto& [m00, m01, m02, m03, m04, m05, m06] = t;
         return {f(m00), f(m01), f(m02), f(m03), f(m04), f(m05), f(m06)};
+    } else if constexpr (M == 8) {
+        auto& [m00, m01, m02, m03, m04, m05, m06, m07] = t;
+        return {f(m00), f(m01), f(m02), f(m03), f(m04), f(m05), f(m06), f(m07)};
+    } else if constexpr (M == 9) {
+        auto& [m00, m01, m02, m03, m04, m05, m06, m07, m08] = t;
+        return {f(m00), f(m01), f(m02), f(m03), f(m04), f(m05), f(m06), f(m07), f(m08)};
+    } else if constexpr (M == 10) {
+        auto& [m00, m01, m02, m03, m04, m05, m06, m07, m08, m09] = t;
+        return {f(m00), f(m01), f(m02), f(m03), f(m04), f(m05), f(m06), f(m07), f(m08), f(m09)};
     }
 }
 
