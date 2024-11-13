@@ -49,6 +49,9 @@ struct wrapper<F, S, layout::aos> {
 
     array_type data;
 
+    value_type& get_reference(std::size_t i) { return data[i]; }
+    const value_type& get_reference(std::size_t i) const { return data[i]; }
+
     proxy_type<reference, S> operator[](std::size_t i) {
         auto id = [](auto& member) -> decltype(auto) { return member; };
         return helper::apply_to_members<M, value_type&, proxy_type<reference, S>>(data[i], id);
