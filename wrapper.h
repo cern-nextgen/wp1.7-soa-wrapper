@@ -6,6 +6,7 @@
 
 #include <cstddef>
 #include <iostream>
+#include <span>
 
 namespace wrapper {
 

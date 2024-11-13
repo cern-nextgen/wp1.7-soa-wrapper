@@ -1,6 +1,7 @@
 #include "wrapper.h"
 
 #include <iostream>
+#include <span>
 #include <string>
 #include <vector>
 
@@ -17,15 +18,24 @@ struct S {
     int abs2() const { return x * x + y * y; }
     int& getX() { return x; }
     const int& getX() const { return x; }
-    void setX(int x_new) { x = x_new; }
+    void setX(auto x_new) { x = x_new; }
 };
 
-using wrapper_type = wrapper::wrapper<std::vector, S, wrapper::layout::soa>;
+using wrapper_type = wrapper::wrapper<std::span, S, wrapper::layout::aos>;
 
 S<wrapper::identity> eval_const_at(const wrapper_type& w, std::size_t i) { return w[i]; }
 
 int main() {
-    wrapper_type my_array(3);
+    wrapper_type my_array;
+
+    std::vector<S<wrapper::identity>> s = {{0, 3, {0.0, 1.0}, "test"}, {1, 4, {0.0, 1.0}, "foo"}, {3, 5, {0.0, 1.0}, "bar"}};
+    my_array.data = s;
+
+    /*S<std::vector> s = {{0, 1, 2}, {3, 4, 5}, {{0.0, 1.0}, {0.0, 1.0}, {0.0, 1.0}}, {"test", "foo", "bar"}};
+    my_array.data.x = s.x;
+    my_array.data.y = s.y;
+    my_array.data.activation = s.activation;
+    my_array.data.identifier = s.identifier;*/
 
     // AoS access
     for (int i = 0; i < 3; ++i) {
