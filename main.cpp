@@ -38,6 +38,7 @@ int main() {
 
     // const_reference
     for (int i = 0; i < 3; ++i) {
+        // S<wrapper::identity>& real_ref = my_array.get_reference(i);
         S<wrapper::const_reference> r = my_array[i];
         std::cout << "Element " << i << ": {"
                 << r.x << ", " << r.y << ", {"
