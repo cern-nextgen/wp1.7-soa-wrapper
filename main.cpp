@@ -1,25 +1,11 @@
+#include "allocator.h"
 #include "wrapper.h"
 
 #include <iostream>
+#include <memory_resource>
 #include <span>
 #include <string>
 #include <vector>
-
-
-template <class T, std::size_t N>
-struct raw_array {
-    T t[N];
-    T& operator[](std::size_t i) { return t[i]; }
-    const T& operator[](std::size_t i) const { return t[i]; }
-};
-
-template <template <class, std::size_t> class array_type, std::size_t N>
-struct bind_size {
-    template <class T>
-    using type = array_type<T, N>;
-};
-
-// bind_size<raw_array, 4>::type
 
 struct Point2D { double x, y; };
 
@@ -36,26 +22,33 @@ struct S {
     void setX(auto x_new) { x = x_new; }
 };
 
-template<wrapper::layout L>
-constexpr wrapper::wrapper<std::span, S, L> construct_wrapper() {
-    if constexpr (L == wrapper::layout::soa) {
-        static std::vector<int> x_init{0, 1, 2};
-        static std::vector<int> y_init{3, 4, 5};
-        static std::vector<Point2D> point_init{{0.0, 1.0}, {0.0, 1.0}, {0.0, 1.0}};
-        static std::vector<std::string> identifier_init{"test", "foo", "bar"};
-        return {{x_init, y_init, point_init, identifier_init}};
-    } else if constexpr (L == wrapper::layout::aos) {
-        static std::vector<S<wrapper::value>> s_init = {
+int main() {
+    constexpr std::size_t bytes = 1024;
+    char buffer[bytes];
+
+    /*allocator::BufferResource resource(buffer, bytes);
+    std::pmr::vector<S<wrapper::value>> s_init = {
+        {
             {0, 3, {0.0, 1.0}, "test"},
             {1, 4, {0.0, 1.0}, "foo"},
             {3, 5, {0.0, 1.0}, "bar"}
-        };
-        return {{s_init}};
-    }
-};
+        },
+        &resource
+    };
+    wrapper::wrapper<std::span, S, wrapper::layout::aos> my_array = {{s_init}};*/
 
-int main() {
-    auto my_array = construct_wrapper<wrapper::layout::aos>();
+    std::size_t interval = 10 * sizeof(int);
+    allocator::BufferResource x_resource(buffer, interval);
+    allocator::BufferResource y_resource(buffer + interval, interval);
+    allocator::BufferResource point_resource(buffer + 2 * interval, 2 * interval);
+    allocator::BufferResource identifier_resource(buffer + 4 * interval, bytes - 4 * interval);
+
+    std::pmr::vector<int> x_init = {{0, 1, 2}, &x_resource};
+    std::pmr::vector<int> y_init = {{3, 4, 5}, &y_resource};
+    std::pmr::vector<Point2D> point_init = {{{0.0, 1.0}, {0.0, 1.0}, {0.0, 1.0}}, &point_resource};
+    std::pmr::vector<std::string> identifier_init = {{"test", "foo", "bar"}, &identifier_resource};
+
+    wrapper::wrapper<std::span, S, wrapper::layout::soa> my_array = {{x_init, y_init, point_init, identifier_init}};
 
     // reference
     for (int i = 0; i < 3; ++i) {
