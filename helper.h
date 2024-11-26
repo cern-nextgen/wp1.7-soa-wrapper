@@ -3,8 +3,6 @@
 
 
 #include <cstddef>
-#include <type_traits>
-#include <utility>
 
 namespace helper {
 
@@ -18,9 +16,9 @@ struct UniversalType {
 }  // namespace detail
 
 template<typename T>
-consteval auto CountMembers(auto ...Members) {
-    if constexpr (requires { T{ Members... }; } == false) return sizeof...(Members) - 1;
-    else return CountMembers<T>(Members..., detail::UniversalType{});
+consteval auto CountMembers(auto ...members) {
+    if constexpr (requires { T{ members... }; } == false) return sizeof...(members) - 1;
+    else return CountMembers<T>(members..., detail::UniversalType{});
 }
 
 template <std::size_t M, typename T, typename S, typename Functor>

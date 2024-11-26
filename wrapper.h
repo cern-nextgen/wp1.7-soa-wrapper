@@ -5,15 +5,13 @@
 #include "helper.h"
 
 #include <cstddef>
-#include <iostream>
-#include <span>
 
 namespace wrapper {
 
 enum class layout { aos = 0, soa = 1 };
 
 template <typename T>
-using identity = T;
+using value = T;
 
 template <typename T>
 using reference = T&;
@@ -23,7 +21,7 @@ using const_reference = const T&;
 
 template <template <class> class F_in, template <template <class> class> class S>
 struct proxy_type : S<F_in> {
-    constexpr static std::size_t M = helper::CountMembers<S<identity>>();
+    constexpr static std::size_t M = helper::CountMembers<S<value>>();
     template<template <class> class F_out>
     operator S<F_out>() const {
         auto id = [](auto& member) -> decltype(auto) { return member; };
@@ -40,13 +38,10 @@ struct wrapper;
 
 template <template <class> class F, template <template <class> class> class S>
 struct wrapper<F, S, layout::aos> {
-    using value_type = S<identity>;
+    using value_type = S<value>;
     using array_type = F<value_type>;
 
     constexpr static std::size_t M = helper::CountMembers<value_type>();
-
-    template <class... Args>
-    wrapper(Args... args) : data(args...) { }
 
     array_type data;
 
@@ -65,16 +60,10 @@ struct wrapper<F, S, layout::aos> {
 
 template <template <class> class F, template <template <class> class> class S>
 struct wrapper<F, S, layout::soa> {
-    using value_type = S<identity>;
+    using value_type = S<value>;
     using array_type = S<F>;
 
     constexpr static std::size_t M = helper::CountMembers<value_type>();
-
-    template <class... Args>
-    wrapper(Args... args) {
-        auto f = [args...](auto member) -> decltype(auto) { return F<decltype(member)>(args...); };
-        data = helper::apply_to_members<M, value_type, array_type>(value_type(), f);
-    }
 
     array_type data;
 
