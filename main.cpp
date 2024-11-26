@@ -6,6 +6,21 @@
 #include <vector>
 
 
+template <class T, std::size_t N>
+struct raw_array {
+    T t[N];
+    T& operator[](std::size_t i) { return t[i]; }
+    const T& operator[](std::size_t i) const { return t[i]; }
+};
+
+template <template <class, std::size_t> class array_type, std::size_t N>
+struct bind_size {
+    template <class T>
+    using type = array_type<T, N>;
+};
+
+// bind_size<raw_array, 4>::type
+
 struct Point2D { double x, y; };
 
 template <template <class> class F>
