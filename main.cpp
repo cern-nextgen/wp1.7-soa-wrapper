@@ -1,11 +1,9 @@
 #include "allocator.h"
+#include "factory.h"
 #include "wrapper.h"
 
 #include <iostream>
-#include <memory_resource>
-#include <span>
 #include <string>
-#include <vector>
 
 struct Point2D { double x, y; };
 
@@ -26,32 +24,12 @@ int main() {
     constexpr std::size_t bytes = 1024;
     char buffer[bytes];
 
-    /*allocator::BufferResource resource(buffer, bytes);
-    std::pmr::vector<S<wrapper::value>> s_init = {
-        {
-            {0, 3, {0.0, 1.0}, "test"},
-            {1, 4, {0.0, 1.0}, "foo"},
-            {3, 5, {0.0, 1.0}, "bar"}
-        },
-        &resource
-    };
-    wrapper::wrapper<std::span, S, wrapper::layout::aos> my_array = {{s_init}};*/
+    auto my_array = factory::make_wrapper<S, wrapper::layout::soa>(buffer, bytes);
 
-    std::size_t interval = 10 * sizeof(int);
-    allocator::BufferResource x_resource(buffer, interval);
-    allocator::BufferResource y_resource(buffer + interval, interval);
-    allocator::BufferResource point_resource(buffer + 2 * interval, 2 * interval);
-    allocator::BufferResource identifier_resource(buffer + 4 * interval, bytes - 4 * interval);
-
-    std::pmr::vector<int> x_init = {{0, 1, 2}, &x_resource};
-    std::pmr::vector<int> y_init = {{3, 4, 5}, &y_resource};
-    std::pmr::vector<Point2D> point_init = {{{0.0, 1.0}, {0.0, 1.0}, {0.0, 1.0}}, &point_resource};
-    std::pmr::vector<std::string> identifier_init = {{"test", "foo", "bar"}, &identifier_resource};
-
-    wrapper::wrapper<std::span, S, wrapper::layout::soa> my_array = {{x_init, y_init, point_init, identifier_init}};
+    std::size_t N = 18;
 
     // reference
-    for (int i = 0; i < 3; ++i) {
+    for (int i = 0; i < N; ++i) {
         S<wrapper::reference> r = my_array[i];
         r.setX(i - 10);
         r.y = i + 50;
@@ -60,7 +38,7 @@ int main() {
     }
 
     // const_reference
-    for (int i = 0; i < 3; ++i) {
+    for (int i = 0; i < N; ++i) {
         S<wrapper::const_reference> cr = my_array[i];
         std::cout << "Element " << i << ": {"
                 << cr.x << ", " << cr.y << ", {"
@@ -69,7 +47,7 @@ int main() {
     }
 
     // member functions
-    for (int i = 0; i < 3; ++i) {
+    for (int i = 0; i < N; ++i) {
         S<wrapper::value> v = my_array[i];
         std::cout << "my_array[" << i << "].getX()" << " == " << v.getX() << ", ";
         std::cout << "my_array[" << i << "].abs2() == "<< v.abs2() << std::endl;

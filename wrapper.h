@@ -23,7 +23,7 @@ struct proxy_type : S<F_in> {
     constexpr static std::size_t M = helper::CountMembers<S<value>>();
     template<template <class> class F_out>
     operator S<F_out>() const {
-        auto id = [](auto& member) -> decltype(auto) { return member; };
+        auto id = [](auto& member, std::size_t) -> decltype(auto) { return member; };
         return helper::apply_to_members<M, S<F_in>, S<F_out>>(*this, id);
     }
 };
@@ -48,11 +48,11 @@ struct wrapper<F, S, layout::aos> {
     const value_type& get_reference(std::size_t i) const { return data[i]; }
 
     proxy_type<reference, S> operator[](std::size_t i) {
-        auto id = [](auto& member) -> decltype(auto) { return member; };
+        auto id = [](auto& member, std::size_t) -> decltype(auto) { return member; };
         return helper::apply_to_members<M, value_type&, proxy_type<reference, S>>(data[i], id);
     }
     proxy_type<const_reference, S> operator[](std::size_t i) const {
-        auto id = [](const auto& member) -> decltype(auto) { return member; };
+        auto id = [](const auto& member, std::size_t) -> decltype(auto) { return member; };
         return helper::apply_to_members<M, const value_type&, proxy_type<const_reference, S>>(data[i], id);
     }
 };
@@ -67,11 +67,11 @@ struct wrapper<F, S, layout::soa> {
     array_type data;
 
     proxy_type<reference, S> operator[](std::size_t i) {
-        auto evaluate_at = [i](auto& member) -> decltype(auto) { return member[i]; };
+        auto evaluate_at = [i](auto& member, std::size_t) -> decltype(auto) { return member[i]; };
         return helper::apply_to_members<M, array_type&, proxy_type<reference, S>>(data, evaluate_at);
     }
     proxy_type<const_reference, S> operator[](std::size_t i) const {
-        auto evaluate_at = [i](const auto& member) -> decltype(auto) { return member[i]; };
+        auto evaluate_at = [i](const auto& member, std::size_t) -> decltype(auto) { return member[i]; };
         return helper::apply_to_members<M, const array_type&, proxy_type<const_reference, S>>(data, evaluate_at);
     }
 };
