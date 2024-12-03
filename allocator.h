@@ -15,6 +15,8 @@ struct BufferResource : public std::pmr::memory_resource {
     BufferResource(char* buffer, std::size_t bytes)
         : buffer_begin(buffer), buffer_end(buffer + bytes), current(buffer) {}
 
+    virtual ~BufferResource() {}
+
 protected:
     void* do_allocate(std::size_t bytes, std::size_t alignment) override {
         std::size_t space = buffer_end - current;
@@ -33,4 +35,4 @@ protected:
 
 }  // namespace allocator
 
-#endif  // ALLOCATOR_h
+#endif  // ALLOCATOR_H
