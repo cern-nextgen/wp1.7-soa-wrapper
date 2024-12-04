@@ -16,21 +16,16 @@ namespace pmr {
 
 template <class T>
 class vector {
+    using data_type = std::pmr::vector<T>;
     std::unique_ptr<std::pmr::memory_resource> resource_m;
     std::pmr::vector<T> data_m;
 public:
     vector(std::size_t size, std::unique_ptr<std::pmr::memory_resource> resource)
             : resource_m(std::move(resource)), data_m(size, resource_m.get()) {}
-    T& operator[](std::size_t i) { return data_m[i]; }
-    T operator[](std::size_t i) const { return data_m[i]; }
+    data_type::reference operator[](std::size_t i) { return data_m[i]; }
+    data_type::const_reference operator[](std::size_t i) const { return data_m[i]; }
 };
 
-}
-
-template <template <template <class> class> class S, wrapper::layout L>
-wrapper::wrapper<pmr::vector, S, L> make_wrapper(char* buffer, std::size_t bytes) {
-    if constexpr (L == wrapper::layout::aos) return make_wrapper_aos<S>(buffer, bytes);
-    else if constexpr (L == wrapper::layout::soa) return make_wrapper_soa<S>(buffer, bytes);
 }
 
 template <template <template <class> class> class S>
@@ -57,6 +52,12 @@ wrapper::wrapper<pmr::vector, S, wrapper::layout::soa> make_wrapper_soa(char* bu
     };
 
     return helper::apply_to_members<M, S<wrapper::value>, wrapper::wrapper<pmr::vector, S, wrapper::layout::soa>>(S<wrapper::value>(), test);
+}
+
+template <template <template <class> class> class S, wrapper::layout L>
+wrapper::wrapper<pmr::vector, S, L> make_wrapper(char* buffer, std::size_t bytes) {
+    if constexpr (L == wrapper::layout::aos) return make_wrapper_aos<S>(buffer, bytes);
+    else if constexpr (L == wrapper::layout::soa) return make_wrapper_soa<S>(buffer, bytes);
 }
 
 }  // namespace factory
