@@ -9,14 +9,14 @@ namespace wrapper {
 
 enum class layout { aos = 0, soa = 1 };
 
-template <typename T>
+template <class T>
 using value = T;
 
-template <typename T>
-using reference = T&;
+template <class T>
+using reference = T&;  // std::vector<T>::reference;
 
-template <typename T>
-using const_reference = const T&;
+template <class T>
+using const_reference = const T&;  // std::vector<T>::const_reference;
 
 template <template <class> class F_in, template <template <class> class> class S>
 struct proxy_type : S<F_in> {
