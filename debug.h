@@ -8,7 +8,7 @@ namespace debug {
 
 struct call_counter  {
     call_counter() { ++default_constructor; }
-    call_counter(std::size_t size) { ++constructor; }
+    call_counter(std::size_t size) { ++nondefault_constructor; }
     call_counter(const call_counter& other) { ++copy_constructor; }
     call_counter& operator=(const call_counter& other) {
         ++copy_assignment;
@@ -21,7 +21,7 @@ struct call_counter  {
     }
     ~call_counter() { ++destructor; }
     static inline std::size_t default_constructor = 0;
-    static inline std::size_t constructor = 0;
+    static inline std::size_t nondefault_constructor = 0;
     static inline std::size_t copy_constructor = 0;
     static inline std::size_t copy_assignment = 0;
     static inline std::size_t move_constructor = 0;
@@ -29,7 +29,7 @@ struct call_counter  {
     static inline std::size_t destructor = 0;
     static void print(std::ostream& stream) {
         stream << "default constructor: " << call_counter::default_constructor << std::endl
-               << "constructor: " << call_counter::constructor << std::endl
+               << "non-default constructor: " << call_counter::nondefault_constructor << std::endl
                << "copy constructor: " << call_counter::copy_constructor << std::endl
                << "copy assignment: " << call_counter::copy_assignment << std::endl
                << "move constructor: " << call_counter::move_constructor << std::endl

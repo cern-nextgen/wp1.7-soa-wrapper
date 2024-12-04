@@ -30,12 +30,13 @@ int main() {
     //auto my_array = factory::make_wrapper<S, wrapper::layout::aos>(buffer, bytes);
 
     std::size_t N = 18;
-    debug::vector<int> x(N);
-    debug::vector<int> y(N);
-    debug::vector<Point2D> point(N);
-    debug::vector<std::string> identifier(N);
     wrapper::wrapper<debug::vector, S, wrapper::layout::soa> my_array{
-        S<debug::vector>{std::move(x), std::move(y), std::move(point), std::move(identifier)}
+        S<debug::vector>{
+            debug::vector<int>(N),
+            debug::vector<int>(N),
+            debug::vector<Point2D>(N),
+            debug::vector<std::string>(N)
+        }
     };
 
     // reference
