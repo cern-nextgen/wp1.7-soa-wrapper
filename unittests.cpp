@@ -31,7 +31,7 @@ bool operator==(Point2D l, Point2D r) { return l.x == r.x && l.y == r.y; }
 
 template<wrapper::layout L>
 void proxy_type() {
-    auto dw = factory::default_wrapper<debug::vector, S, L>(1);  // aos
+    auto dw = factory::default_wrapper<debug::vector, S, L>(1);
     S<wrapper::value> s = {1, 2, {3.0, 4.0}, "Test"};
     dw[0].x = s.x; dw[0].y = s.y; dw[0].point = s.point; dw[0].identifier = s.identifier;
 
