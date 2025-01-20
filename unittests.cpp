@@ -29,8 +29,9 @@ template <class L, class R>
 bool operator==(L l, R r) { return l.x == r.x && l.y == r.y && l.point == r.point && l.identifier == r.identifier; }
 bool operator==(Point2D l, Point2D r) { return l.x == r.x && l.y == r.y; }
 
-TEST(UnitTests, ProxyType) {
-    auto dw = factory::default_wrapper<debug::vector, S, wrapper::layout::soa>(1);  // aos
+template<wrapper::layout L>
+void proxy_type() {
+    auto dw = factory::default_wrapper<debug::vector, S, L>(1);  // aos
     S<wrapper::value> s = {1, 2, {3.0, 4.0}, "Test"};
     dw[0].x = s.x; dw[0].y = s.y; dw[0].point = s.point; dw[0].identifier = s.identifier;
 
@@ -46,3 +47,6 @@ TEST(UnitTests, ProxyType) {
     r.x = new_value;
     EXPECT_EQ(dw[0].x, new_value);
 }
+
+TEST(ProxyType, SoA) { proxy_type<wrapper::layout::soa>(); }
+TEST(ProxyType, AoS) { proxy_type<wrapper::layout::aos>(); }
