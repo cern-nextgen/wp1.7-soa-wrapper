@@ -79,49 +79,103 @@ void test_random_access(std::size_t N, wrapper::wrapper<F, S, L> w) {
 }
 
 TEST(Wrapper, AoS) {
-    std::size_t N = 18;
-    wrapper::wrapper<debug::vector, S, wrapper::layout::aos> w{
-        debug::vector<S<wrapper::value>>(N)
-    };
-    test_random_access(N, std::move(w));
+    debug::call_counter::count.reset();
+    debug::counters expected_count = {0, 1, 0, 0, 1, 0, 2};
+    {
+        std::size_t N = 18;
+        wrapper::wrapper<debug::vector, S, wrapper::layout::aos> w{
+            debug::vector<S<wrapper::value>>(N)
+        };
+        test_random_access(N, std::move(w));
+    }
+    EXPECT_EQ(expected_count, debug::call_counter::count);
 }
 TEST(Wrapper, SoA) {
-    std::size_t N = 18;
-    wrapper::wrapper<debug::vector, S, wrapper::layout::soa> w{
-        S<debug::vector>{
-            debug::vector<int>(N),
-            debug::vector<int>(N),
-            debug::vector<Point2D>(N),
-            debug::vector<std::string>(N)
-        }
-    };
-    test_random_access(N, std::move(w));
+    debug::call_counter::count.reset();
+    debug::counters expected_count = {0, 4, 0, 0, 4, 0, 8};
+    {
+        std::size_t N = 18;
+        wrapper::wrapper<debug::vector, S, wrapper::layout::soa> w{
+            S<debug::vector>{
+                debug::vector<int>(N),
+                debug::vector<int>(N),
+                debug::vector<Point2D>(N),
+                debug::vector<std::string>(N)
+            }
+        };
+        test_random_access(N, std::move(w));
+    }
+    EXPECT_EQ(expected_count, debug::call_counter::count);
+}
+
+TEST(SpanWrapper, AoS) {
+    debug::call_counter::count.reset();
+    debug::counters expected_count = {0, 1, 0, 0, 0, 0, 1};
+    {
+        std::size_t N = 18;
+        debug::vector<S<wrapper::value>> data(N);
+        wrapper::wrapper<std::span, S, wrapper::layout::aos> w{ data };
+        test_random_access(N, std::move(w));
+    }
+    EXPECT_EQ(expected_count, debug::call_counter::count);
+}
+TEST(SpanWrapper, SoA) {
+    debug::call_counter::count.reset();
+    debug::counters expected_count = {0, 4, 0, 0, 0, 0, 4};
+    {
+        std::size_t N = 18;
+        debug::vector<int> x(N);
+        debug::vector<int> y(N);
+        debug::vector<Point2D> points(N);
+        debug::vector<std::string> identifier(N);
+        wrapper::wrapper<std::span, S, wrapper::layout::soa> w{{ x, y, points, identifier }};
+        test_random_access(N, std::move(w));
+    }
+    EXPECT_EQ(expected_count, debug::call_counter::count);
 }
 
 TEST(DefaultWrapper, AoS) {
-    std::size_t N = 5;
-    auto w = factory::default_wrapper<debug::vector, S, wrapper::layout::aos>(N);
-    test_random_access(N, std::move(w));
+    debug::call_counter::count.reset();
+    debug::counters expected_count = {0, 1, 0, 0, 1, 0, 2};
+    {
+        std::size_t N = 5;
+        auto w = factory::default_wrapper<debug::vector, S, wrapper::layout::aos>(N);
+        test_random_access(N, std::move(w));
+    }
+    EXPECT_EQ(expected_count, debug::call_counter::count);
 }
 TEST(DefaultWrapper, SoA) {
-    std::size_t N = 5;
-    auto w = factory::default_wrapper<debug::vector, S, wrapper::layout::soa>(N);
-    test_random_access(N, std::move(w));
+    debug::call_counter::count.reset();
+    debug::counters expected_count = {0, 4, 0, 0, 4, 0, 8};
+    {
+        std::size_t N = 5;
+        auto w = factory::default_wrapper<debug::vector, S, wrapper::layout::soa>(N);
+        test_random_access(N, std::move(w));
+    }
+    EXPECT_EQ(expected_count, debug::call_counter::count);
 }
 
 TEST(BufferWrapper, AoS) {
-    std::size_t N = 18;
-    std::size_t bytes = 1024;
-    char buffer[bytes];
-
-    auto w = factory::buffer_wrapper<S, wrapper::layout::aos>(buffer, bytes);
-    test_random_access(N, std::move(w));
+    debug::call_counter::count.reset();
+    debug::counters expected_count = {0, 0, 0, 0, 0, 0, 0};
+    {
+        std::size_t N = 18;
+        std::size_t bytes = 1024;
+        char buffer[bytes];
+        auto w = factory::buffer_wrapper<S, wrapper::layout::aos>(buffer, bytes);
+        test_random_access(N, std::move(w));
+    }
+    EXPECT_EQ(expected_count, debug::call_counter::count);
 }
 TEST(BufferWrapper, SoA) {
-    std::size_t N = 18;
-    std::size_t bytes = 1024;
-    char buffer[bytes];
-
-    auto w = factory::buffer_wrapper<S, wrapper::layout::soa>(buffer, bytes);
-    test_random_access(N, std::move(w));
+    debug::call_counter::count.reset();
+    debug::counters expected_count = {0, 0, 0, 0, 0, 0, 0};
+    {
+        std::size_t N = 18;
+        std::size_t bytes = 1024;
+        char buffer[bytes];
+        auto w = factory::buffer_wrapper<S, wrapper::layout::soa>(buffer, bytes);
+        test_random_access(N, std::move(w));
+    }
+    EXPECT_EQ(expected_count, debug::call_counter::count);
 }
