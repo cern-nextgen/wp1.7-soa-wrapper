@@ -30,38 +30,38 @@ bool operator==(L l, R r) { return l.x == r.x && l.y == r.y && l.point == r.poin
 bool operator==(Point2D l, Point2D r) { return l.x == r.x && l.y == r.y; }
 
 template<template <class> class F, wrapper::layout L>
-void proxy_type(std::size_t N, wrapper::wrapper<F, S, L> w) {
-    // reference
+void initialize(std::size_t N, wrapper::wrapper<F, S, L> &w) {
     for (int i = 0; i < N; ++i) {
         S<wrapper::reference> r = w[i];
+        w[i].x = i - 10;
+        w[i].y = i + 50;
+        w[i].point = {0.5 * i, 0.5 * i};
+        w[i].identifier = "Bla";
+    }
+}
 
-        r.setX(-1);
-        EXPECT_EQ(w[i].x, -1);
-
-        r.getX() = i - 10;
-        r.y = i + 50;
-        r.point = {0.5 * i, 0.5 * i};
-        r.identifier = "Bla";
-
+template<template <class> class F, wrapper::layout L>
+void assert_equal_to_initialization(std::size_t N, const wrapper::wrapper<F, S, L> &w) {
+    for (int i = 0; i < N; ++i) {
         EXPECT_EQ(w[i].x, i - 10);
         EXPECT_EQ(w[i].y, i + 50);
         EXPECT_EQ(w[i].point, Point2D(0.5 * i, 0.5 * i));
         EXPECT_EQ(w[i].identifier, "Bla");
     }
+}
 
-    wrapper::wrapper<F, S, L> w_copy = w;
+template<template <class> class F, wrapper::layout L>
+void test_random_access(std::size_t N, wrapper::wrapper<F, S, L> w) {
+
+    initialize(N, w);
+    assert_equal_to_initialization(N, w);
 
     // const_reference
     for (int i = 0; i < N; ++i) {
         S<wrapper::const_reference> cr = w[i];
-
-        EXPECT_EQ(cr.abs2(), w_copy[i].abs2());
-
-        EXPECT_EQ(cr.x, w_copy[i].x);
-        EXPECT_EQ(cr.y, w_copy[i].y);
-        EXPECT_EQ(cr.point, w_copy[i].point);
-        EXPECT_EQ(cr.identifier, w_copy[i].identifier);
+        EXPECT_EQ(cr.abs2(), w[i].abs2());
     }
+    assert_equal_to_initialization(N, w);
 
     // value
     for (int i = 0; i < N; ++i) {
@@ -72,23 +72,56 @@ void proxy_type(std::size_t N, wrapper::wrapper<F, S, L> w) {
         v.point = {5.0 * i, 5.0 * i};
         v.identifier = "Test";
 
-        EXPECT_EQ(w[i].getX(), w_copy[i].getX());
-        EXPECT_EQ(w[i].abs2(), w_copy[i].abs2());
-
-        EXPECT_EQ(w[i].x, w_copy[i].x);
-        EXPECT_EQ(w[i].y, w_copy[i].y);
-        EXPECT_EQ(w[i].point, w_copy[i].point);
-        EXPECT_EQ(w[i].identifier, w_copy[i].identifier);
+        EXPECT_NE(v.getX(), w[i].x);
+        EXPECT_NE(v.abs2(), w[i].abs2());
     }
+    assert_equal_to_initialization(N, w);
 }
 
-TEST(ProxyType, AoS) {
+TEST(Wrapper, AoS) {
+    std::size_t N = 18;
+    wrapper::wrapper<debug::vector, S, wrapper::layout::aos> w{
+        debug::vector<S<wrapper::value>>(N)
+    };
+    test_random_access(N, std::move(w));
+}
+TEST(Wrapper, SoA) {
+    std::size_t N = 18;
+    wrapper::wrapper<debug::vector, S, wrapper::layout::soa> w{
+        S<debug::vector>{
+            debug::vector<int>(N),
+            debug::vector<int>(N),
+            debug::vector<Point2D>(N),
+            debug::vector<std::string>(N)
+        }
+    };
+    test_random_access(N, std::move(w));
+}
+
+TEST(DefaultWrapper, AoS) {
     std::size_t N = 5;
     auto w = factory::default_wrapper<debug::vector, S, wrapper::layout::aos>(N);
-    proxy_type<debug::vector, wrapper::layout::aos>(N, std::move(w));
+    test_random_access(N, std::move(w));
 }
-TEST(ProxyType, SoA) {
+TEST(DefaultWrapper, SoA) {
     std::size_t N = 5;
     auto w = factory::default_wrapper<debug::vector, S, wrapper::layout::soa>(N);
-    proxy_type<debug::vector, wrapper::layout::soa>(N, std::move(w));
+    test_random_access(N, std::move(w));
+}
+
+TEST(BufferWrapper, AoS) {
+    std::size_t N = 18;
+    std::size_t bytes = 1024;
+    char buffer[bytes];
+
+    auto w = factory::buffer_wrapper<S, wrapper::layout::aos>(buffer, bytes);
+    test_random_access(N, std::move(w));
+}
+TEST(BufferWrapper, SoA) {
+    std::size_t N = 18;
+    std::size_t bytes = 1024;
+    char buffer[bytes];
+
+    auto w = factory::buffer_wrapper<S, wrapper::layout::soa>(buffer, bytes);
+    test_random_access(N, std::move(w));
 }

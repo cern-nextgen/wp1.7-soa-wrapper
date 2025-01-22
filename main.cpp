@@ -27,7 +27,7 @@ int main() {
         constexpr std::size_t bytes = 1024;
         char buffer[bytes];
 
-        //auto my_array = factory::make_wrapper<S, wrapper::layout::aos>(buffer, bytes);
+        //auto my_array = factory::buffer_wrapper<S, wrapper::layout::aos>(buffer, bytes);
 
         std::size_t N = 18;
         wrapper::wrapper<debug::vector, S, wrapper::layout::soa> my_array{

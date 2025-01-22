@@ -29,7 +29,7 @@ public:
 }
 
 template <template <template <class> class> class S>
-wrapper::wrapper<pmr::vector, S, wrapper::layout::aos> make_wrapper_aos(char* buffer, std::size_t bytes) {
+wrapper::wrapper<pmr::vector, S, wrapper::layout::aos> buffer_wrapper_aos(char* buffer, std::size_t bytes) {
     std::size_t size = bytes / sizeof(S<wrapper::value>);
     auto resource_ptr = std::make_unique<allocator::BufferResource>(buffer, bytes);
     pmr::vector<S<wrapper::value>> data(size, std::move(resource_ptr));
@@ -37,7 +37,7 @@ wrapper::wrapper<pmr::vector, S, wrapper::layout::aos> make_wrapper_aos(char* bu
 }
 
 template <template <template <class> class> class S>
-wrapper::wrapper<pmr::vector, S, wrapper::layout::soa> make_wrapper_soa(char* buffer, std::size_t bytes) {
+wrapper::wrapper<pmr::vector, S, wrapper::layout::soa> buffer_wrapper_soa(char* buffer, std::size_t bytes) {
     constexpr std::size_t M = helper::CountMembers<S<wrapper::value>>();
     auto size_of = [](auto& member, std::size_t) -> std::size_t { return sizeof(member); };
     std::array<std::size_t, M> member_bytes = helper::apply_to_members<M, S<wrapper::value>, std::array<std::size_t, M>>(S<wrapper::value>(), size_of);
@@ -55,9 +55,9 @@ wrapper::wrapper<pmr::vector, S, wrapper::layout::soa> make_wrapper_soa(char* bu
 }
 
 template <template <template <class> class> class S, wrapper::layout L>
-wrapper::wrapper<pmr::vector, S, L> make_wrapper(char* buffer, std::size_t bytes) {
-    if constexpr (L == wrapper::layout::aos) return make_wrapper_aos<S>(buffer, bytes);
-    else if constexpr (L == wrapper::layout::soa) return make_wrapper_soa<S>(buffer, bytes);
+wrapper::wrapper<pmr::vector, S, L> buffer_wrapper(char* buffer, std::size_t bytes) {
+    if constexpr (L == wrapper::layout::aos) return buffer_wrapper_aos<S>(buffer, bytes);
+    else if constexpr (L == wrapper::layout::soa) return buffer_wrapper_soa<S>(buffer, bytes);
 }
 
 template <
