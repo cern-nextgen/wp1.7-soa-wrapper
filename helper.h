@@ -8,19 +8,19 @@ namespace helper {
 namespace detail {
 
 struct UniversalType {
-    template<typename T>
+    template<class T>
     operator T() {}
 };
 
 }  // namespace detail
 
-template<typename T>
-consteval auto CountMembers(auto ...members) {
+template<class T>
+consteval std::size_t CountMembers(auto ...members) {
     if constexpr (requires { T{ members... }; } == false) return sizeof...(members) - 1;
     else return CountMembers<T>(members..., detail::UniversalType{});
 }
 
-template <std::size_t M, typename T, typename S, typename Functor>
+template <std::size_t M, class T, class S, class Functor>
 constexpr S apply_to_members(T t, Functor&& f) {
     if constexpr (M == 0) {
         return {};

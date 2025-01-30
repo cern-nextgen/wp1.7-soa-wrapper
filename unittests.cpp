@@ -17,7 +17,7 @@ struct S {
     F<int> x;
     F<int> y;
     F<Point2D> point;
-    F<std::string> identifier;
+    F<double> identifier;
 
     int abs2() const { return x * x + y * y; }
     int& getX() { return x; }
@@ -29,6 +29,9 @@ template <class L, class R>
 bool operator==(L l, R r) { return l.x == r.x && l.y == r.y && l.point == r.point && l.identifier == r.identifier; }
 bool operator==(Point2D l, Point2D r) { return l.x == r.x && l.y == r.y; }
 
+template <class T>
+using my_span = std::span<T>;  // avoid clang bug about default template parameters
+
 template<template <class> class F, wrapper::layout L>
 void initialize(std::size_t N, wrapper::wrapper<F, S, L> &w) {
     for (int i = 0; i < N; ++i) {
@@ -36,7 +39,7 @@ void initialize(std::size_t N, wrapper::wrapper<F, S, L> &w) {
         w[i].x = i - 10;
         w[i].y = i + 50;
         w[i].point = {0.5 * i, 0.5 * i};
-        w[i].identifier = "Bla";
+        w[i].identifier = 0.1 * i;
     }
 }
 
@@ -46,7 +49,7 @@ void assert_equal_to_initialization(std::size_t N, const wrapper::wrapper<F, S, 
         EXPECT_EQ(w[i].x, i - 10);
         EXPECT_EQ(w[i].y, i + 50);
         EXPECT_EQ(w[i].point, Point2D(0.5 * i, 0.5 * i));
-        EXPECT_EQ(w[i].identifier, "Bla");
+        EXPECT_EQ(w[i].identifier, 0.1 * i);
     }
 }
 
@@ -70,7 +73,7 @@ void test_random_access(std::size_t N, wrapper::wrapper<F, S, L> w) {
         v.setX(i - 1);
         v.y = i + 5;
         v.point = {5.0 * i, 5.0 * i};
-        v.identifier = "Test";
+        v.identifier = 0.1 * i;
 
         EXPECT_NE(v.getX(), w[i].x);
         EXPECT_NE(v.abs2(), w[i].abs2());
@@ -100,7 +103,7 @@ TEST(Wrapper, SoA) {
                 debug::vector<int>(N),
                 debug::vector<int>(N),
                 debug::vector<Point2D>(N),
-                debug::vector<std::string>(N)
+                debug::vector<double>(N)
             }
         };
         test_random_access(N, std::move(w));
@@ -114,7 +117,7 @@ TEST(SpanWrapper, AoS) {
     {
         std::size_t N = 18;
         debug::vector<S<wrapper::value>> data(N);
-        wrapper::wrapper<std::span, S, wrapper::layout::aos> w{ data };
+        wrapper::wrapper<my_span, S, wrapper::layout::aos> w{ data };
         test_random_access(N, std::move(w));
     }
     EXPECT_EQ(expected_count, debug::call_counter::count);
@@ -127,8 +130,8 @@ TEST(SpanWrapper, SoA) {
         debug::vector<int> x(N);
         debug::vector<int> y(N);
         debug::vector<Point2D> points(N);
-        debug::vector<std::string> identifier(N);
-        wrapper::wrapper<std::span, S, wrapper::layout::soa> w{{ x, y, points, identifier }};
+        debug::vector<double> identifier(N);
+        wrapper::wrapper<my_span, S, wrapper::layout::soa> w{{ x, y, points, identifier }};
         test_random_access(N, std::move(w));
     }
     EXPECT_EQ(expected_count, debug::call_counter::count);
