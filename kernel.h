@@ -3,7 +3,7 @@
 
 namespace kernel {
 
-int runKernel();
+float run();
 
 }  // namespace kernel
 

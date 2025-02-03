@@ -32,7 +32,8 @@ int main() {
 
     // auto my_array = factory::buffer_wrapper<S, wrapper::layout::aos>(buffer, bytes);
 
-    void runKernel();
+    float error = kernel::run();
+    std::cout << "Kernel output: " << error << std::endl;
 
     std::size_t N = 18;
     wrapper::wrapper<my_vector, S, wrapper::layout::soa> my_array{

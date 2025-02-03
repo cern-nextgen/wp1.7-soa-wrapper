@@ -11,6 +11,7 @@ set(CMAKE_CUDA_STANDARD_REQUIRED True)
 
 add_library(kernel STATIC kernel.cu kernel.h)
 set_target_properties(kernel PROPERTIES CUDA_SEPARABLE_COMPILATION ON CUDA_ARCHITECTURES 89)
+target_include_directories(kernel PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 
 # Executable ----------------------------------
