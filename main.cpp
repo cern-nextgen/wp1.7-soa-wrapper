@@ -1,27 +1,13 @@
-#include "allocator.h"
-#include "debug.h"
-#include "factory.h"
-#include "kernel.h"
-#include "wrapper.h"
-
 #include <iostream>
 #include <span>
 #include <vector>
 
-struct Point2D { double x, y; };
-
-template <template <class> class F>
-struct S {
-    F<int> x;
-    F<int> y;
-    F<Point2D> point;
-    F<double> identifier;  // std::string causes linker error
-
-    int abs2() const { return x * x + y * y; }
-    int& getX() { return x; }
-    const int& getX() const { return x; }
-    void setX(int x_new) { x = x_new; }
-};
+#include "allocator.h"
+#include "debug.h"
+#include "factory.h"
+#include "kernel.h"
+#include "skeleton.h"
+#include "wrapper.h"
 
 template <class T>
 using my_vector = std::vector<T>;  // avoid clang bug about default template parameters

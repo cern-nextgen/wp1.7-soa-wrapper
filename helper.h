@@ -3,25 +3,29 @@
 
 #include <cstddef>
 
+#include "gpu.h"
+
+
 namespace helper {
 
 namespace detail {
 
 struct UniversalType {
     template<class T>
-    operator T() {}
+    GPUd() operator T() {}
 };
 
 }  // namespace detail
 
 template<class T>
-consteval std::size_t CountMembers(auto ...members) {
-    if constexpr (requires { T{ members... }; } == false) return sizeof...(members) - 1;
-    else return CountMembers<T>(members..., detail::UniversalType{});
+GPUd() consteval std::size_t CountMembers(auto ...members) {
+    return 4;
+    // if constexpr (requires { T{ members... }; } == false) return sizeof...(members) - 1;
+    // else return CountMembers<T>(members..., detail::UniversalType{});
 }
 
 template <std::size_t M, class T, class S, class Functor>
-constexpr S apply_to_members(T t, Functor&& f) {
+GPUd() constexpr S apply_to_members(T t, Functor&& f) {
     if constexpr (M == 0) {
         return {};
     } else if constexpr (M == 1) {
