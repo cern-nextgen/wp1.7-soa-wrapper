@@ -21,6 +21,7 @@ set_target_properties(wrapper PROPERTIES CUDA_SEPARABLE_COMPILATION ON CUDA_ARCH
 target_include_directories(wrapper PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(wrapper PRIVATE kernel)
 
+
 # Unit Tests ----------------------------------
 
 include(FetchContent)
