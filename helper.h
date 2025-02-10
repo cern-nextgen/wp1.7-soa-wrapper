@@ -12,16 +12,39 @@ namespace detail {
 
 struct UniversalType {
     template<class T>
-    GPUd() operator T() {}
+    GPUd() operator T() const;
+};
+
+template <typename T, typename Is, typename=void>
+struct is_aggregate_constructible_from_n_impl : std::false_type {};
+
+template <typename T, std::size_t...Is>
+struct is_aggregate_constructible_from_n_impl<T, std::index_sequence<Is...>, std::void_t<decltype(T{(void(Is), UniversalType{})...})>> : std::true_type {};
+
+template <typename T, std::size_t N>
+using is_aggregate_constructible_from_n_helper = is_aggregate_constructible_from_n_impl<T, std::make_index_sequence<N>>;
+
+template <typename T, std::size_t N>
+struct is_aggregate_constructible_from_n {
+    constexpr static bool value = is_aggregate_constructible_from_n_helper<T, N>::value && !is_aggregate_constructible_from_n_helper<T, N+1>::value;
 };
 
 }  // namespace detail
 
-template<class T>
-GPUd() consteval std::size_t CountMembers(auto ...members) {
-    return 4;
-    // if constexpr (requires { T{ members... }; } == false) return sizeof...(members) - 1;
-    // else return CountMembers<T>(members..., detail::UniversalType{});
+template <class T>
+GPUd() constexpr std::size_t CountMembers() {
+    if constexpr (detail::is_aggregate_constructible_from_n<T, 0>::value) return 0;
+    else if (detail::is_aggregate_constructible_from_n<T,  1>::value) return  1;
+    else if (detail::is_aggregate_constructible_from_n<T,  2>::value) return  2;
+    else if (detail::is_aggregate_constructible_from_n<T,  3>::value) return  3;
+    else if (detail::is_aggregate_constructible_from_n<T,  4>::value) return  4;
+    else if (detail::is_aggregate_constructible_from_n<T,  5>::value) return  5;
+    else if (detail::is_aggregate_constructible_from_n<T,  6>::value) return  6;
+    else if (detail::is_aggregate_constructible_from_n<T,  7>::value) return  7;
+    else if (detail::is_aggregate_constructible_from_n<T,  8>::value) return  8;
+    else if (detail::is_aggregate_constructible_from_n<T,  9>::value) return  9;
+    else if (detail::is_aggregate_constructible_from_n<T, 10>::value) return 10;
+    else return 100;  // Silence warnings about missing return value
 }
 
 template <std::size_t M, class T, class S, class Functor>

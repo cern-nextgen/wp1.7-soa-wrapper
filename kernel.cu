@@ -16,13 +16,17 @@ void print_cuda_error(cudaError_t err) {
 
 template <class T>
 struct raw_array {
-    T *data;
-    GPUd() T& operator[](std::size_t i) { return data[i]; }
-    GPUd() const T& operator[](std::size_t i) const { return data[i]; }
+    T *ptr;
+    GPUd() T& operator[](std::size_t i) { return ptr[i]; }
+    GPUd() const T& operator[](std::size_t i) const { return ptr[i]; }
 };
 
-__global__
-void add(int N, wrapper::wrapper<raw_array, S, wrapper::layout::aos> w) {
+template <
+    template <class> class F,
+    template <template <class> class> class S,
+    wrapper::layout L
+>
+__global__ void add(int N, wrapper::wrapper<F, S, L> w) {
     int index = blockIdx.x * blockDim.x + threadIdx.x;
     int stride = blockDim.x * gridDim.x;
     for (int i = index; i < N; i += stride) w[i].y = w[i].x + w[i].y;
@@ -30,8 +34,13 @@ void add(int N, wrapper::wrapper<raw_array, S, wrapper::layout::aos> w) {
 
 int run() {
     int N = 8;
-    wrapper::wrapper<raw_array, S, wrapper::layout::aos> w;
-    print_cuda_error(cudaMallocManaged(&w.data.data, N * sizeof(S<wrapper::value>)));
+    wrapper::wrapper<raw_array, S, wrapper::layout::aos> w;  // aos
+    print_cuda_error(cudaMallocManaged(&w.data.ptr, N * sizeof(S<wrapper::value>)));
+    /*print_cuda_error(cudaMallocManaged(&w.data.x.ptr, N * sizeof(int)));
+    print_cuda_error(cudaMallocManaged(&w.data.y.ptr, N * sizeof(int)));
+    print_cuda_error(cudaMallocManaged(&w.data.point.ptr, N * sizeof(Point2D)));
+    print_cuda_error(cudaMallocManaged(&w.data.identifier.ptr, N * sizeof(double)));*/
+
     for (int i = 0; i < N; ++i) {
         S<wrapper::reference> r = w[i];
         r.setX(1);
@@ -47,7 +56,11 @@ int run() {
 
     int maxError = 0;
     for (int i = 0; i < N; ++i) maxError = std::max(maxError, std::abs(w[i].y - 3));
-    print_cuda_error(cudaFree(w.data.data));
+    print_cuda_error(cudaFree(w.data.ptr));
+    /*print_cuda_error(cudaFree(w.data.x.ptr));
+    print_cuda_error(cudaFree(w.data.y.ptr));
+    print_cuda_error(cudaFree(w.data.point.ptr));
+    print_cuda_error(cudaFree(w.data.identifier.ptr));*/
     return maxError;
 }
 
