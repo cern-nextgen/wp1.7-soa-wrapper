@@ -22,7 +22,7 @@ struct S {
     int abs2() const { return x * x + y * y; }
     int& getX() { return x; }
     const int& getX() const { return x; }
-    void setX(auto x_new) { x = x_new; }
+    void setX(int x_new) { x = x_new; }
 };
 
 template <class L, class R>
