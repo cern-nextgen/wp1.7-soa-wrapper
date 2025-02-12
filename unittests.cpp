@@ -32,6 +32,9 @@ bool operator==(Point2D l, Point2D r) { return l.x == r.x && l.y == r.y; }
 template <class T>
 using my_span = std::span<T>;  // avoid clang bug about default template parameters
 
+template <class T>
+using pointer_type = T*;
+
 template<template <class> class F, wrapper::layout L>
 void initialize(std::size_t N, wrapper::wrapper<F, S, L> &w) {
     for (int i = 0; i < N; ++i) {
@@ -181,4 +184,20 @@ TEST(BufferWrapper, SoA) {
         test_random_access(N, std::move(w));
     }
     EXPECT_EQ(expected_count, debug::call_counter::count);
+}
+
+TEST(PointerWrapper, AoS) {
+    constexpr std::size_t N = 18;
+    S<wrapper::value> data[N];
+    wrapper::wrapper<pointer_type, S, wrapper::layout::aos> w = { data };
+    test_random_access(N, std::move(w));
+}
+TEST(PointerWrapper, SoA) {
+    constexpr std::size_t N = 18;
+    int x[N];
+    int y[N];
+    Point2D point[N];
+    double identifier[N];
+    wrapper::wrapper<pointer_type, S, wrapper::layout::soa> w = { x, y, point, identifier };
+    test_random_access(N, std::move(w));
 }
