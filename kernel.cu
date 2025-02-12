@@ -15,11 +15,7 @@ void print_cuda_error(cudaError_t err) {
 }
 
 template <class T>
-struct raw_array {
-    T *ptr;
-    GPUd() T& operator[](std::size_t i) { return ptr[i]; }
-    GPUd() const T& operator[](std::size_t i) const { return ptr[i]; }
-};
+using pointer_type = T*;
 
 template <
     template <class> class F,
@@ -29,17 +25,47 @@ template <
 __global__ void add(int N, wrapper::wrapper<F, S, L> w) {
     int index = blockIdx.x * blockDim.x + threadIdx.x;
     int stride = blockDim.x * gridDim.x;
-    for (int i = index; i < N; i += stride) w[i].y = w[i].x + w[i].y;
+    for (int i = index; i < N; i += stride) w[i].y = w[i].getX() + w[i].y;
 }
 
-int run() {
-    int N = 8;
-    wrapper::wrapper<raw_array, S, wrapper::layout::aos> w;  // aos
-    print_cuda_error(cudaMallocManaged(&w.data.ptr, N * sizeof(S<wrapper::value>)));
-    /*print_cuda_error(cudaMallocManaged(&w.data.x.ptr, N * sizeof(int)));
-    print_cuda_error(cudaMallocManaged(&w.data.y.ptr, N * sizeof(int)));
-    print_cuda_error(cudaMallocManaged(&w.data.point.ptr, N * sizeof(Point2D)));
-    print_cuda_error(cudaMallocManaged(&w.data.identifier.ptr, N * sizeof(double)));*/
+template <wrapper::layout L> struct UnifiedMemoryManager;
+
+template <>
+struct UnifiedMemoryManager<wrapper::layout::aos> {
+    UnifiedMemoryManager(std::size_t N) { print_cuda_error(cudaMallocManaged(&data, N * sizeof(S<wrapper::value>))); }
+    wrapper::wrapper<pointer_type, S, wrapper::layout::aos> create_wrapper() { return { data }; }
+    ~UnifiedMemoryManager() { print_cuda_error(cudaFree(data)); }
+    private:
+    pointer_type<S<wrapper::value>> data;
+};
+
+template <>
+struct UnifiedMemoryManager<wrapper::layout::soa> {
+    UnifiedMemoryManager(std::size_t N) {
+        print_cuda_error(cudaMallocManaged(&x, N * sizeof(int)));
+        print_cuda_error(cudaMallocManaged(&y, N * sizeof(int)));
+        print_cuda_error(cudaMallocManaged(&point, N * sizeof(Point2D)));
+        print_cuda_error(cudaMallocManaged(&identifier, N * sizeof(double)));
+    }
+    wrapper::wrapper<pointer_type, S, wrapper::layout::soa> create_wrapper() { return { x, y, point, identifier }; }
+    ~UnifiedMemoryManager() {
+        print_cuda_error(cudaFree(x));
+        print_cuda_error(cudaFree(y));
+        print_cuda_error(cudaFree(point));
+        print_cuda_error(cudaFree(identifier));
+    }
+    private:
+    pointer_type<int> x;
+    pointer_type<int> y;
+    pointer_type<Point2D> point;
+    pointer_type<double> identifier;
+};
+
+template <wrapper::layout L>
+int unified_memory_test() {
+    std::size_t N = 8;
+    UnifiedMemoryManager<L> unified_memory_manager(N);
+    auto w = unified_memory_manager.create_wrapper();
 
     for (int i = 0; i < N; ++i) {
         S<wrapper::reference> r = w[i];
@@ -56,12 +82,14 @@ int run() {
 
     int maxError = 0;
     for (int i = 0; i < N; ++i) maxError = std::max(maxError, std::abs(w[i].y - 3));
-    print_cuda_error(cudaFree(w.data.ptr));
-    /*print_cuda_error(cudaFree(w.data.x.ptr));
-    print_cuda_error(cudaFree(w.data.y.ptr));
-    print_cuda_error(cudaFree(w.data.point.ptr));
-    print_cuda_error(cudaFree(w.data.identifier.ptr));*/
+
     return maxError;
+}
+
+int run() {
+    int error_aos = unified_memory_test<wrapper::layout::aos>();
+    int error_soa = unified_memory_test<wrapper::layout::soa>();
+    return std::max(error_aos, error_soa);
 }
 
 }  // namespace kernel
