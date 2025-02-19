@@ -6,10 +6,14 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CUDA_STANDARD 20)
 set(CMAKE_CUDA_STANDARD_REQUIRED True)
 
+# Avoid linker error "undefined reference to std::__cxx11::basic_string"
+add_compile_definitions(_GLIBCXX_USE_CXX11_ABI=0)
+
 
 # CUDA ----------------------------------------
 
-add_library(kernel STATIC kernel.cu kernel.h)
+add_library(kernel STATIC)
+target_sources(kernel PRIVATE kernel.cu)
 set_target_properties(kernel PROPERTIES CUDA_SEPARABLE_COMPILATION ON CUDA_ARCHITECTURES 89)
 target_include_directories(kernel PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -35,8 +39,9 @@ FetchContent_MakeAvailable(googletest)
 enable_testing()
 
 add_executable(unittests unittests.cpp)
+set_target_properties(unittests PROPERTIES CUDA_SEPARABLE_COMPILATION ON CUDA_ARCHITECTURES 89)
 target_include_directories(unittests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(unittests GTest::gtest_main)
+target_link_libraries(unittests GTest::gtest_main kernel)
 
 include(GoogleTest)
 gtest_discover_tests(unittests)
