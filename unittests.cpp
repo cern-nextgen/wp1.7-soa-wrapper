@@ -1,11 +1,11 @@
 #include "allocator.h"
 #include "debug.h"
 #include "factory.h"
+#include "kernel.h"
 #include "wrapper.h"
 
 #include <iostream>
 #include <span>
-#include <string>
 
 #include <gtest/gtest.h>
 
@@ -201,3 +201,16 @@ TEST(PointerWrapper, SoA) {
     wrapper::wrapper<pointer_type, S, wrapper::layout::soa> w = { x, y, point, identifier };
     test_random_access(N, std::move(w));
 }
+
+/*TEST(UnifiedMemoryWrapper, AoS) {
+    constexpr std::size_t N = 18;
+    kernel::UnifiedMemoryManager<S, wrapper::layout::aos> umm(N);
+    auto w = umm.create_wrapper();
+    test_random_access(N, w);
+}
+TEST(UnifiedMemoryWrapper, SoA) {
+    constexpr std::size_t N = 18;
+    kernel::UnifiedMemoryManager<S, wrapper::layout::soa> umm(N);
+    auto w = umm.create_wrapper();
+    test_random_access(N, w);
+}*/
