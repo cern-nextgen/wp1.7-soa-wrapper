@@ -1,3 +1,6 @@
+#ifndef SKELETON_H
+#define SKELETON_H
+
 #include "gpu.h"
 
 struct Point2D { double x, y; };
@@ -14,3 +17,5 @@ struct S {
     GPUd() const int& getX() const { return x; }
     GPUd() void setX(int x_new) { x = x_new; }
 };
+
+#endif  // SKELETON_H

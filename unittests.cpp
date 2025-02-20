@@ -2,28 +2,13 @@
 #include "debug.h"
 #include "factory.h"
 #include "kernel.h"
+#include "skeleton.h"
 #include "wrapper.h"
 
 #include <iostream>
 #include <span>
 
 #include <gtest/gtest.h>
-
-
-struct Point2D { double x, y; };
-
-template <template <class> class F>
-struct S {
-    F<int> x;
-    F<int> y;
-    F<Point2D> point;
-    F<double> identifier;
-
-    int abs2() const { return x * x + y * y; }
-    int& getX() { return x; }
-    const int& getX() const { return x; }
-    void setX(int x_new) { x = x_new; }
-};
 
 template <class L, class R>
 bool operator==(L l, R r) { return l.x == r.x && l.y == r.y && l.point == r.point && l.identifier == r.identifier; }
@@ -40,7 +25,7 @@ void initialize(std::size_t N, wrapper::wrapper<F, S, L> &w) {
     for (int i = 0; i < N; ++i) {
         S<wrapper::reference> r = w[i];
         w[i].x = i - 10;
-        w[i].y = i + 50;
+        w[i].y = i + 10;
         w[i].point = {0.5 * i, 0.5 * i};
         w[i].identifier = 0.1 * i;
     }
@@ -50,7 +35,7 @@ template<template <class> class F, wrapper::layout L>
 void assert_equal_to_initialization(std::size_t N, const wrapper::wrapper<F, S, L> &w) {
     for (int i = 0; i < N; ++i) {
         EXPECT_EQ(w[i].x, i - 10);
-        EXPECT_EQ(w[i].y, i + 50);
+        EXPECT_EQ(w[i].y, i + 10);
         EXPECT_EQ(w[i].point, Point2D(0.5 * i, 0.5 * i));
         EXPECT_EQ(w[i].identifier, 0.1 * i);
     }
@@ -202,15 +187,19 @@ TEST(PointerWrapper, SoA) {
     test_random_access(N, std::move(w));
 }
 
-/*TEST(UnifiedMemoryWrapper, AoS) {
+TEST(UnifiedMemoryWrapper, AoS) {
     constexpr std::size_t N = 18;
     kernel::UnifiedMemoryManager<S, wrapper::layout::aos> umm(N);
     auto w = umm.create_wrapper();
     test_random_access(N, w);
+    kernel::apply(N, w);
+    for (int i = 0; i < N; ++i) EXPECT_EQ(w[i].y, 2 * i);
 }
 TEST(UnifiedMemoryWrapper, SoA) {
     constexpr std::size_t N = 18;
     kernel::UnifiedMemoryManager<S, wrapper::layout::soa> umm(N);
     auto w = umm.create_wrapper();
     test_random_access(N, w);
-}*/
+    kernel::apply(N, w);
+    for (int i = 0; i < N; ++i) EXPECT_EQ(w[i].y, 2 * i);
+}
