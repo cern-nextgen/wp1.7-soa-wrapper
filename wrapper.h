@@ -45,6 +45,9 @@ struct wrapper<F, S, layout::aos> {
 
     constexpr static std::size_t M = helper::CountMembers<value_type>();
 
+    template <template <class> class F_out>
+    operator wrapper<F_out, S, layout::aos>() { return {data}; };
+
     array_type data;
 
     GPUd() value_type& get_reference(std::size_t i) { return data[i]; }
@@ -66,6 +69,12 @@ struct wrapper<F, S, layout::soa> {
     using array_type = S<F>;
 
     constexpr static std::size_t M = helper::CountMembers<value_type>();
+
+    template <template <class> class F_out>
+    operator wrapper<F_out, S, layout::soa>() {
+        auto id = [](auto& member, std::size_t) -> decltype(auto) { return member; };
+        return helper::apply_to_members<M, array_type&, wrapper<F_out, S, layout::soa>>(data, id);
+    };
 
     array_type data;
 
