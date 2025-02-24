@@ -1,6 +1,8 @@
 #ifndef KERNEL_H
 #define KERNEL_H
 
+#include <span>
+
 #include "wrapper.h"
 
 namespace kernel {
@@ -8,6 +10,14 @@ namespace kernel {
 int cuda_malloc_managed(void** data, std::size_t size);
 
 int cuda_free(void* ptr);
+
+int cuda_malloc(void** d_data, int size);
+
+enum class copy_flag { cudaMemcpyHostToDevice, cudaMemcpyDeviceToHost };
+int cuda_memcpy(void* d_data, void* h_data, int size, copy_flag flag);
+
+template <class T>
+using span_type = std::span<T>;
 
 template <class T>
 using pointer_type = T*;
