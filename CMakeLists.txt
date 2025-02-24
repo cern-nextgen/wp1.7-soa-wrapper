@@ -6,6 +6,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CUDA_STANDARD 20)
 set(CMAKE_CUDA_STANDARD_REQUIRED True)
 
+# Allow "std::span" on the device
+set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-relaxed-constexpr")
+
 # Avoid linker error "undefined reference to std::__cxx11::basic_string"
 add_compile_definitions(_GLIBCXX_USE_CXX11_ABI=0)
 

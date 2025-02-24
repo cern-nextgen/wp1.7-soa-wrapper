@@ -15,7 +15,7 @@ bool operator==(L l, R r) { return l.x == r.x && l.y == r.y && l.point == r.poin
 bool operator==(Point2D l, Point2D r) { return l.x == r.x && l.y == r.y; }
 
 template <class T>
-using my_span = std::span<T>;  // avoid clang bug about default template parameters
+using my_span = std::span<T>;  // avoid clang error about default template parameters
 
 template <class T>
 using pointer_type = T*;
@@ -202,4 +202,66 @@ TEST(UnifiedMemoryWrapper, SoA) {
     test_random_access(N, w);
     kernel::apply(N, w);
     for (int i = 0; i < N; ++i) EXPECT_EQ(w[i].y, 2 * i);
+}
+
+TEST(DeviceSpanWrapper, AoS) {
+    constexpr std::size_t N = 18;
+    constexpr std::size_t size = N * sizeof(S<wrapper::value>);
+
+    auto * h_data = (S<wrapper::value> *)malloc(size);
+    wrapper::wrapper<kernel::pointer_type, S, wrapper::layout::aos> h_w{h_data};
+    test_random_access(N, h_w);
+
+    S<wrapper::value> *d_data;
+    kernel::cuda_malloc((void **) &d_data, size);
+    wrapper::wrapper<kernel::span_type, S, wrapper::layout::aos> d_w{{d_data, d_data + size}};
+    kernel::cuda_memcpy(d_data, h_data, size, kernel::copy_flag::cudaMemcpyHostToDevice);
+    kernel::apply(N, d_w);
+    kernel::cuda_memcpy(h_data, d_data, size, kernel::copy_flag::cudaMemcpyDeviceToHost);
+
+    for (int i = 0; i < N; ++i) EXPECT_EQ(h_w[i].y, 2 * i);
+
+    kernel::cuda_free(d_data);
+    free(h_data);
+}
+
+TEST(DeviceSpanWrapper, SoA) {
+    constexpr std::size_t N = 18;
+
+    auto * h_x = (int *)malloc(N * sizeof(int));
+    auto * h_y = (int *)malloc(N * sizeof(int));
+    auto * h_point = (Point2D *)malloc(N * sizeof(Point2D));
+    auto * h_identifier = (double *)malloc(N * sizeof(double));
+    wrapper::wrapper<kernel::pointer_type, S, wrapper::layout::soa> h_w{{h_x, h_y, h_point, h_identifier}};
+    test_random_access(N, h_w);
+
+    int * d_x; kernel::cuda_malloc((void **) &d_x, N * sizeof(int)); kernel::cuda_memcpy(d_x, h_x, N * sizeof(int), kernel::copy_flag::cudaMemcpyHostToDevice);
+    int * d_y; kernel::cuda_malloc((void **) &d_y, N * sizeof(int)); kernel::cuda_memcpy(d_y, h_y, N * sizeof(int), kernel::copy_flag::cudaMemcpyHostToDevice);
+    Point2D * d_point; kernel::cuda_malloc((void **) &d_point, N * sizeof(Point2D)); kernel::cuda_memcpy(d_point, h_point, N * sizeof(Point2D), kernel::copy_flag::cudaMemcpyHostToDevice);
+    double * d_identifier; kernel::cuda_malloc((void **) &d_identifier, N * sizeof(double)); kernel::cuda_memcpy(d_identifier, h_identifier, N * sizeof(double), kernel::copy_flag::cudaMemcpyHostToDevice);
+
+    wrapper::wrapper<kernel::span_type, S, wrapper::layout::soa> d_w{{
+        {d_x, d_x + N * sizeof(int)},
+        {d_y, d_y + N * sizeof(int)},
+        {d_point, d_point + N * sizeof(Point2D)},
+        {d_identifier, d_identifier + N * sizeof(double)}
+    }};
+
+    kernel::apply(N, d_w);
+    kernel::cuda_memcpy(h_x, d_x, N * sizeof(int), kernel::copy_flag::cudaMemcpyDeviceToHost);
+    kernel::cuda_memcpy(h_y, d_y, N * sizeof(int), kernel::copy_flag::cudaMemcpyDeviceToHost);
+    kernel::cuda_memcpy(h_point, d_point, N * sizeof(Point2D), kernel::copy_flag::cudaMemcpyDeviceToHost);
+    kernel::cuda_memcpy(h_identifier, d_identifier, N * sizeof(double), kernel::copy_flag::cudaMemcpyDeviceToHost);
+
+    for (int i = 0; i < N; ++i) EXPECT_EQ(h_w[i].y, 2 * i);
+
+    kernel::cuda_free(d_x);
+    kernel::cuda_free(d_y);
+    kernel::cuda_free(d_point);
+    kernel::cuda_free(d_identifier);
+
+    free(h_x);
+    free(h_y);
+    free(h_point);
+    free(h_identifier);
 }
