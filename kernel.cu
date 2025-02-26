@@ -19,15 +19,15 @@ int cuda_malloc_managed(void** data, std::size_t size) { return cudaMallocManage
 
 int cuda_free(void* ptr) { return cudaFree(ptr); }
 
-int cuda_malloc(void** d_data, int size) { return cudaMalloc(d_data, size); }
+int cuda_malloc(void** d_data, std::size_t size) { return cudaMalloc(d_data, size); }
 
-int cuda_memcpy(void* to, void* from, int size, copy_flag flag) {
+int cuda_memcpy(void* to, void* from, std::size_t size, cuda_memcpy_kind kind) {
     cudaError_t err;
-    switch (flag) {
-        case copy_flag::cudaMemcpyHostToDevice:
+    switch (kind) {
+        case cuda_memcpy_kind::cudaMemcpyHostToDevice:
         err = cudaMemcpy(to, from, size, cudaMemcpyHostToDevice);
         break;
-        case copy_flag::cudaMemcpyDeviceToHost:
+        case cuda_memcpy_kind::cudaMemcpyDeviceToHost:
         err = cudaMemcpy(to, from, size, cudaMemcpyDeviceToHost);
         break;
         default:
