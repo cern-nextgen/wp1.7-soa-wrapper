@@ -1,6 +1,7 @@
 #ifndef KERNEL_H
 #define KERNEL_H
 
+#include <memory>
 #include <span>
 
 #include "wrapper.h"
@@ -28,6 +29,38 @@ template <
     wrapper::layout L
 >
 void apply(int N, wrapper::wrapper<F, S, L> w);
+
+template<class T>
+struct ManagedMemoryAllocator {
+    using value_type = T;
+    ManagedMemoryAllocator() = default;
+
+    template <class U>
+    ManagedMemoryAllocator(const ManagedMemoryAllocator<U>&) {}
+
+    T* allocate(std::size_t n) {
+        T* ptr;
+        cuda_malloc_managed((void **) &ptr, sizeof(T) * n);
+        return ptr;
+    }
+
+    void deallocate(T* p, std::size_t n) noexcept { cuda_free(p); }
+};
+
+template <class T>
+struct device_memory_deleter { void operator()(T * ptr) { kernel::cuda_free(ptr); } };
+
+template <class T>
+struct device_memory_array {
+    device_memory_array(std::size_t N) : ptr(nullptr, device_memory_deleter<T>{}), N{N} {
+        cuda_malloc((void **) &ptr, N * sizeof(T));
+    }
+    operator std::span<T>() { return { ptr.get(), ptr.get() + N }; }
+    T operator[](std::size_t i) const { return *(ptr.get() + i); }
+    T& operator[](std::size_t i) { return *(ptr.get() + i); }
+    std::shared_ptr<T> ptr;
+    std::size_t N;
+};
 
 template <template <template <class> class> class S, wrapper::layout L>
 struct UnifiedMemoryManager;
