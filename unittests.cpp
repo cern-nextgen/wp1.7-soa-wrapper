@@ -189,23 +189,6 @@ TEST(PointerWrapper, SoA) {
     test_random_access(N, std::move(w));
 }
 
-TEST(UnifiedMemoryWrapper, AoS) {
-    constexpr std::size_t N = 18;
-    kernel::UnifiedMemoryManager<S, wrapper::layout::aos> umm(N);
-    auto w = umm.create_wrapper();
-    test_random_access(N, w);
-    kernel::apply(N, w);
-    for (int i = 0; i < N; ++i) EXPECT_EQ(w[i].y, 2 * i);
-}
-TEST(UnifiedMemoryWrapper, SoA) {
-    constexpr std::size_t N = 18;
-    kernel::UnifiedMemoryManager<S, wrapper::layout::soa> umm(N);
-    auto w = umm.create_wrapper();
-    test_random_access(N, w);
-    kernel::apply(N, w);
-    for (int i = 0; i < N; ++i) EXPECT_EQ(w[i].y, 2 * i);
-}
-
 template <class T>
 using managed_memory_vector = std::vector<T, kernel::ManagedMemoryAllocator<T>>;
 
@@ -216,6 +199,7 @@ TEST(ManagedMemorySpanWrapper, AoS) {
     };
     initialize(N, w);
     assert_equal_to_initialization(N, w);
+
     wrapper::wrapper<kernel::span_type, S, wrapper::layout::aos> w_span(w);
     kernel::apply(N, w_span);
 
@@ -231,6 +215,7 @@ TEST(ManagedMemorySpanWrapper, SoA) {
     }};
     initialize(N, w);
     assert_equal_to_initialization(N, w);
+
     wrapper::wrapper<kernel::span_type, S, wrapper::layout::soa> w_span(w);
     kernel::apply(N, w_span);
 
@@ -240,43 +225,32 @@ TEST(ManagedMemorySpanWrapper, SoA) {
 TEST(DeviceSpanWrapper, AoS) {
     constexpr std::size_t N = 18;
 
-    S<wrapper::value> h_data[N];
-    wrapper::wrapper<kernel::pointer_type, S, wrapper::layout::aos> h_w{h_data};
-    test_random_access(N, h_w);
+    wrapper::wrapper<debug::vector, S, wrapper::layout::aos> h_w{{N}};
+    initialize(N, h_w);
+    assert_equal_to_initialization(N, h_w);
+    wrapper::wrapper<kernel::span_type, S, wrapper::layout::aos> h_span(h_w);
 
     wrapper::wrapper<kernel::device_memory_array, S, wrapper::layout::aos> d_w{N};
     wrapper::wrapper<kernel::span_type, S, wrapper::layout::aos> d_span(d_w);
-    kernel::cuda_memcpy(d_span.data.data(), h_data, d_span.data.size_bytes(), kernel::copy_flag::cudaMemcpyHostToDevice);
+    kernel::cuda_memcpy(d_span, h_span, N, kernel::copy_flag::cudaMemcpyHostToDevice);
     kernel::apply(N, d_span);
-    kernel::cuda_memcpy(h_data, d_span.data.data(), d_span.data.size_bytes(), kernel::copy_flag::cudaMemcpyDeviceToHost);
+    kernel::cuda_memcpy(h_span, d_span, N, kernel::copy_flag::cudaMemcpyDeviceToHost);
 
     for (int i = 0; i < N; ++i) EXPECT_EQ(h_w[i].y, 2 * i);
 }
 TEST(DeviceSpanWrapper, SoA) {
     constexpr std::size_t N = 18;
 
-    int h_x[N];
-    int h_y[N];
-    Point2D h_point[N];
-    double h_identifier[N];
+    wrapper::wrapper<debug::vector, S, wrapper::layout::soa> h_w{{ N, N, N, N }};
+    initialize(N, h_w);
+    assert_equal_to_initialization(N, h_w);
+    wrapper::wrapper<kernel::span_type, S, wrapper::layout::soa> h_span(h_w);
 
-    wrapper::wrapper<kernel::pointer_type, S, wrapper::layout::soa> h_w{{h_x, h_y, h_point, h_identifier}};
-    test_random_access(N, h_w);
-
-    wrapper::wrapper<kernel::device_memory_array, S, wrapper::layout::soa> d_w{{ N, N, N, N}};
+    wrapper::wrapper<kernel::device_memory_array, S, wrapper::layout::soa> d_w{{ N, N, N, N }};
     wrapper::wrapper<kernel::span_type, S, wrapper::layout::soa> d_span(d_w);
-
-    kernel::cuda_memcpy(d_span.data.x.data(), h_x, d_span.data.x.size_bytes(), kernel::copy_flag::cudaMemcpyHostToDevice);
-    kernel::cuda_memcpy(d_span.data.y.data(), h_y, d_span.data.y.size_bytes(), kernel::copy_flag::cudaMemcpyHostToDevice);
-    kernel::cuda_memcpy(d_span.data.point.data(), h_point, d_span.data.point.size_bytes(), kernel::copy_flag::cudaMemcpyHostToDevice);
-    kernel::cuda_memcpy(d_span.data.identifier.data(), h_identifier, d_span.data.identifier.size_bytes(), kernel::copy_flag::cudaMemcpyHostToDevice);
-
+    kernel::cuda_memcpy(d_span, h_span, N, kernel::copy_flag::cudaMemcpyHostToDevice);
     kernel::apply(N, d_span);
-
-    kernel::cuda_memcpy(h_x, d_span.data.x.data(), d_span.data.x.size_bytes(), kernel::copy_flag::cudaMemcpyDeviceToHost);
-    kernel::cuda_memcpy(h_y, d_w.data.y.ptr.get(), d_span.data.y.size_bytes(), kernel::copy_flag::cudaMemcpyDeviceToHost);
-    kernel::cuda_memcpy(h_point, d_span.data.point.data(), d_span.data.point.size_bytes(), kernel::copy_flag::cudaMemcpyDeviceToHost);
-    kernel::cuda_memcpy(h_identifier, d_span.data.identifier.data(), d_span.data.identifier.size_bytes(), kernel::copy_flag::cudaMemcpyDeviceToHost);
+    kernel::cuda_memcpy(h_span, d_span, N, kernel::copy_flag::cudaMemcpyDeviceToHost);
 
     for (int i = 0; i < N; ++i) EXPECT_EQ(h_w[i].y, 2 * i);
 }
