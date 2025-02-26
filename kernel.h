@@ -12,10 +12,10 @@ int cuda_malloc_managed(void** data, std::size_t size);
 
 int cuda_free(void* ptr);
 
-int cuda_malloc(void** d_data, int size);
+int cuda_malloc(void** d_data, std::size_t size);
 
-enum class copy_flag { cudaMemcpyHostToDevice, cudaMemcpyDeviceToHost };
-int cuda_memcpy(void* d_data, void* h_data, int size, copy_flag flag);
+enum class cuda_memcpy_kind { cudaMemcpyHostToDevice, cudaMemcpyDeviceToHost };
+int cuda_memcpy(void* d_data, void* h_data, std::size_t size, cuda_memcpy_kind kind);
 
 template <class T>
 using span_type = std::span<T>;
@@ -25,12 +25,12 @@ int cuda_memcpy(
     wrapper::wrapper<span_type, S, wrapper::layout::aos> dst,
     wrapper::wrapper<span_type, S, wrapper::layout::aos> src,
     std::size_t N,
-    copy_flag flag) {
+    cuda_memcpy_kind kind) {
     return cuda_memcpy(
         dst.data.data(),
         src.data.data(),
         N * sizeof(S<wrapper::value>),
-        flag
+        kind
     );
 }
 
@@ -39,12 +39,12 @@ int cuda_memcpy(
     wrapper::wrapper<span_type, S, wrapper::layout::soa> dst,
     wrapper::wrapper<span_type, S, wrapper::layout::soa> src,
     std::size_t N,
-    copy_flag flag) {
+    cuda_memcpy_kind kind) {
     // TODO: Use apply_to_member to make this generic
-    cuda_memcpy(dst.data.x.data(), src.data.x.data(), N * sizeof(int), flag);
-    cuda_memcpy(dst.data.y.data(), src.data.y.data(), N * sizeof(int), flag);
-    cuda_memcpy(dst.data.point.data(), src.data.point.data(), N * 2 * sizeof(int), flag);
-    cuda_memcpy(dst.data.identifier.data(), src.data.identifier.data(), N * sizeof(double), flag);
+    cuda_memcpy(dst.data.x.data(), src.data.x.data(), N * sizeof(int), kind);
+    cuda_memcpy(dst.data.y.data(), src.data.y.data(), N * sizeof(int), kind);
+    cuda_memcpy(dst.data.point.data(), src.data.point.data(), N * 2 * sizeof(int), kind);
+    cuda_memcpy(dst.data.identifier.data(), src.data.identifier.data(), N * sizeof(double), kind);
     return -1;
 }
 
