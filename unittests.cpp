@@ -6,7 +6,9 @@
 #include "wrapper.h"
 
 #include <iostream>
+#include <memory>
 #include <span>
+#include <vector>
 
 #include <gtest/gtest.h>
 
@@ -204,64 +206,77 @@ TEST(UnifiedMemoryWrapper, SoA) {
     for (int i = 0; i < N; ++i) EXPECT_EQ(w[i].y, 2 * i);
 }
 
+template <class T>
+using managed_memory_vector = std::vector<T, kernel::ManagedMemoryAllocator<T>>;
+
+TEST(ManagedMemorySpanWrapper, AoS) {
+    constexpr std::size_t N = 18;
+    wrapper::wrapper<managed_memory_vector, S, wrapper::layout::aos> w{
+        managed_memory_vector<S<wrapper::value>>(N)
+    };
+    initialize(N, w);
+    assert_equal_to_initialization(N, w);
+    wrapper::wrapper<kernel::span_type, S, wrapper::layout::aos> w_span(w);
+    kernel::apply(N, w_span);
+
+    for (int i = 0; i < N; ++i) EXPECT_EQ(w[i].y, 2 * i);
+}
+TEST(ManagedMemorySpanWrapper, SoA) {
+    constexpr std::size_t N = 18;
+    wrapper::wrapper<managed_memory_vector, S, wrapper::layout::soa> w{{
+        managed_memory_vector<int>(N),
+        managed_memory_vector<int>(N),
+        managed_memory_vector<Point2D>(N),
+        managed_memory_vector<double>(N)
+    }};
+    initialize(N, w);
+    assert_equal_to_initialization(N, w);
+    wrapper::wrapper<kernel::span_type, S, wrapper::layout::soa> w_span(w);
+    kernel::apply(N, w_span);
+
+    for (int i = 0; i < N; ++i) EXPECT_EQ(w[i].y, 2 * i);
+}
+
 TEST(DeviceSpanWrapper, AoS) {
     constexpr std::size_t N = 18;
-    constexpr std::size_t size = N * sizeof(S<wrapper::value>);
 
-    auto * h_data = (S<wrapper::value> *)malloc(size);
+    S<wrapper::value> h_data[N];
     wrapper::wrapper<kernel::pointer_type, S, wrapper::layout::aos> h_w{h_data};
     test_random_access(N, h_w);
 
-    S<wrapper::value> *d_data;
-    kernel::cuda_malloc((void **) &d_data, size);
-    wrapper::wrapper<kernel::span_type, S, wrapper::layout::aos> d_w{{d_data, d_data + size}};
-    kernel::cuda_memcpy(d_data, h_data, size, kernel::copy_flag::cudaMemcpyHostToDevice);
-    kernel::apply(N, d_w);
-    kernel::cuda_memcpy(h_data, d_data, size, kernel::copy_flag::cudaMemcpyDeviceToHost);
+    wrapper::wrapper<kernel::device_memory_array, S, wrapper::layout::aos> d_w{N};
+    wrapper::wrapper<kernel::span_type, S, wrapper::layout::aos> d_span(d_w);
+    kernel::cuda_memcpy(d_span.data.data(), h_data, d_span.data.size_bytes(), kernel::copy_flag::cudaMemcpyHostToDevice);
+    kernel::apply(N, d_span);
+    kernel::cuda_memcpy(h_data, d_span.data.data(), d_span.data.size_bytes(), kernel::copy_flag::cudaMemcpyDeviceToHost);
 
     for (int i = 0; i < N; ++i) EXPECT_EQ(h_w[i].y, 2 * i);
-
-    kernel::cuda_free(d_data);
-    free(h_data);
 }
-
 TEST(DeviceSpanWrapper, SoA) {
     constexpr std::size_t N = 18;
 
-    auto * h_x = (int *)malloc(N * sizeof(int));
-    auto * h_y = (int *)malloc(N * sizeof(int));
-    auto * h_point = (Point2D *)malloc(N * sizeof(Point2D));
-    auto * h_identifier = (double *)malloc(N * sizeof(double));
+    int h_x[N];
+    int h_y[N];
+    Point2D h_point[N];
+    double h_identifier[N];
+
     wrapper::wrapper<kernel::pointer_type, S, wrapper::layout::soa> h_w{{h_x, h_y, h_point, h_identifier}};
     test_random_access(N, h_w);
 
-    int * d_x; kernel::cuda_malloc((void **) &d_x, N * sizeof(int)); kernel::cuda_memcpy(d_x, h_x, N * sizeof(int), kernel::copy_flag::cudaMemcpyHostToDevice);
-    int * d_y; kernel::cuda_malloc((void **) &d_y, N * sizeof(int)); kernel::cuda_memcpy(d_y, h_y, N * sizeof(int), kernel::copy_flag::cudaMemcpyHostToDevice);
-    Point2D * d_point; kernel::cuda_malloc((void **) &d_point, N * sizeof(Point2D)); kernel::cuda_memcpy(d_point, h_point, N * sizeof(Point2D), kernel::copy_flag::cudaMemcpyHostToDevice);
-    double * d_identifier; kernel::cuda_malloc((void **) &d_identifier, N * sizeof(double)); kernel::cuda_memcpy(d_identifier, h_identifier, N * sizeof(double), kernel::copy_flag::cudaMemcpyHostToDevice);
+    wrapper::wrapper<kernel::device_memory_array, S, wrapper::layout::soa> d_w{{ N, N, N, N}};
+    wrapper::wrapper<kernel::span_type, S, wrapper::layout::soa> d_span(d_w);
 
-    wrapper::wrapper<kernel::span_type, S, wrapper::layout::soa> d_w{{
-        {d_x, d_x + N * sizeof(int)},
-        {d_y, d_y + N * sizeof(int)},
-        {d_point, d_point + N * sizeof(Point2D)},
-        {d_identifier, d_identifier + N * sizeof(double)}
-    }};
+    kernel::cuda_memcpy(d_span.data.x.data(), h_x, d_span.data.x.size_bytes(), kernel::copy_flag::cudaMemcpyHostToDevice);
+    kernel::cuda_memcpy(d_span.data.y.data(), h_y, d_span.data.y.size_bytes(), kernel::copy_flag::cudaMemcpyHostToDevice);
+    kernel::cuda_memcpy(d_span.data.point.data(), h_point, d_span.data.point.size_bytes(), kernel::copy_flag::cudaMemcpyHostToDevice);
+    kernel::cuda_memcpy(d_span.data.identifier.data(), h_identifier, d_span.data.identifier.size_bytes(), kernel::copy_flag::cudaMemcpyHostToDevice);
 
-    kernel::apply(N, d_w);
-    kernel::cuda_memcpy(h_x, d_x, N * sizeof(int), kernel::copy_flag::cudaMemcpyDeviceToHost);
-    kernel::cuda_memcpy(h_y, d_y, N * sizeof(int), kernel::copy_flag::cudaMemcpyDeviceToHost);
-    kernel::cuda_memcpy(h_point, d_point, N * sizeof(Point2D), kernel::copy_flag::cudaMemcpyDeviceToHost);
-    kernel::cuda_memcpy(h_identifier, d_identifier, N * sizeof(double), kernel::copy_flag::cudaMemcpyDeviceToHost);
+    kernel::apply(N, d_span);
+
+    kernel::cuda_memcpy(h_x, d_span.data.x.data(), d_span.data.x.size_bytes(), kernel::copy_flag::cudaMemcpyDeviceToHost);
+    kernel::cuda_memcpy(h_y, d_w.data.y.ptr.get(), d_span.data.y.size_bytes(), kernel::copy_flag::cudaMemcpyDeviceToHost);
+    kernel::cuda_memcpy(h_point, d_span.data.point.data(), d_span.data.point.size_bytes(), kernel::copy_flag::cudaMemcpyDeviceToHost);
+    kernel::cuda_memcpy(h_identifier, d_span.data.identifier.data(), d_span.data.identifier.size_bytes(), kernel::copy_flag::cudaMemcpyDeviceToHost);
 
     for (int i = 0; i < N; ++i) EXPECT_EQ(h_w[i].y, 2 * i);
-
-    kernel::cuda_free(d_x);
-    kernel::cuda_free(d_y);
-    kernel::cuda_free(d_point);
-    kernel::cuda_free(d_identifier);
-
-    free(h_x);
-    free(h_y);
-    free(h_point);
-    free(h_identifier);
 }

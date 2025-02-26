@@ -1,14 +1,15 @@
 #ifndef FACTORY_H
 #define FACTORY_H
 
+#include <array>
+#include <numeric>
+#include <memory_resource>
+#include <type_traits>
+
 #include "allocator.h"
 #include "helper.h"
+#include "kernel.h"
 #include "wrapper.h"
-
-#include <type_traits>
-#include <numeric>
-#include <array>
-#include <memory_resource>
 
 namespace factory {
 
