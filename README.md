@@ -9,6 +9,7 @@ cd build
 cmake ..
 make
 ./wrapper
+```
 
 ## TODO
 - Default initializations
@@ -18,4 +19,3 @@ make
 - Don't define closures twice
 - Return classical reference to struct in AoS case
 - Allow classical reference wehn passing to a function in AoS case
-```
