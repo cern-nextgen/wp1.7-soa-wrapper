@@ -18,4 +18,4 @@ make
 - Agregate initialization for arrays
 - Don't define closures twice
 - Return classical reference to struct in AoS case
-- Allow classical reference wehn passing to a function in AoS case
+- Allow classical reference when passing to a function in AoS case
