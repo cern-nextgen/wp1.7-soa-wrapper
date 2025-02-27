@@ -4,6 +4,7 @@
 #include <memory>
 #include <span>
 
+#include "helper.h"
 #include "wrapper.h"
 
 namespace kernel {
@@ -21,31 +22,26 @@ template <class T>
 using span_type = std::span<T>;
 
 template <template <template <class> class> class S>
-int cuda_memcpy(
+void cuda_memcpy(
     wrapper::wrapper<span_type, S, wrapper::layout::aos> dst,
     wrapper::wrapper<span_type, S, wrapper::layout::aos> src,
     std::size_t N,
-    cuda_memcpy_kind kind) {
-    return cuda_memcpy(
-        dst.data.data(),
-        src.data.data(),
-        N * sizeof(S<wrapper::value>),
-        kind
-    );
-}
+    cuda_memcpy_kind kind
+) { cuda_memcpy(dst.data.data(), src.data.data(), N * sizeof(S<wrapper::value>), kind); }
 
 template <template <template <class> class> class S>
-int cuda_memcpy(
+void cuda_memcpy(
     wrapper::wrapper<span_type, S, wrapper::layout::soa> dst,
     wrapper::wrapper<span_type, S, wrapper::layout::soa> src,
     std::size_t N,
     cuda_memcpy_kind kind) {
-    // TODO: Use apply_to_member to make this generic
-    cuda_memcpy(dst.data.x.data(), src.data.x.data(), N * sizeof(int), kind);
-    cuda_memcpy(dst.data.y.data(), src.data.y.data(), N * sizeof(int), kind);
-    cuda_memcpy(dst.data.point.data(), src.data.point.data(), N * 2 * sizeof(int), kind);
-    cuda_memcpy(dst.data.identifier.data(), src.data.identifier.data(), N * sizeof(double), kind);
-    return -1;
+    constexpr static std::size_t M = helper::CountMembers<S<wrapper::value>>();
+    auto memcpy = [N, kind](auto dst_span, auto src_span) -> void {
+        using value_type = decltype(src_span)::value_type;
+        cuda_memcpy(dst_span.data(), src_span.data(), N * sizeof(value_type), kind);
+    };
+    using array_type = wrapper::wrapper<span_type, S, wrapper::layout::soa>::array_type;
+    helper::apply_to_member_pairs<M, array_type>(dst.data, src.data, memcpy);
 }
 
 template <class T>
