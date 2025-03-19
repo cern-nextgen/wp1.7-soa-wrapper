@@ -1,4 +1,5 @@
-name: self-hosted-workflow
+name: build-and-test
+
 on:
   workflow_dispatch:
 
@@ -10,6 +11,12 @@ jobs:
       - name: nvidia-smi
         run: |
           nvidia-smi
-      - name: gpuburn
+      - name: configure
         run: |
-          /app/gpu_burn 60
+          cmake -B ${{github.workspace}}/build
+      - name: build
+        run: |
+          cmake -B ${{github.workspace}}/build
+      - name: test
+        run: |
+          ctest --test-dir ${{github.workspace}}/build
