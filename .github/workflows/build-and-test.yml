@@ -1,0 +1,15 @@
+name: self-hosted-workflow
+on:
+  workflow_dispatch:
+
+jobs:
+  test-gpu:
+    runs-on: cern-nextgen-gpu
+    container: registry.cern.ch/docker.io/rochaporto/gpu_burn
+    steps:
+      - name: nvidia-smi
+        run: |
+          nvidia-smi
+      - name: gpuburn
+        run: |
+          /app/gpu_burn 60
