@@ -16,7 +16,13 @@ jobs:
         run: |
           apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys A4B469963BF863CC
           apt-get -y update
-          DEBIAN_FRONTEND=noninteractive apt-get -y install cmake clang cuda-nvcc-11-1
+          DEBIAN_FRONTEND=noninteractive apt-get -y install build-essential libtool autoconf unzip wget libssl-dev clang cuda-nvcc-12-8
+          wget https://github.com/Kitware/CMake/releases/download/v3.31.6/cmake-3.31.6.tar.gz
+          tar -xzvf cmake-3.31.6.tar.gz
+          cd cmake-3.31.6/
+          ./bootstrap
+          make
+          make install
       - name: configure
         run: |
           CXX=clang++ CUDACXX=nvcc cmake -B ${{github.workspace}}/build
