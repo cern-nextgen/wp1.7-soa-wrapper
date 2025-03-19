@@ -11,6 +11,10 @@ jobs:
       - name: nvidia-smi
         run: |
           nvidia-smi
+      - name: install
+        run: |
+          apt-get -y update
+          DEBIAN_FRONTEND=noninteractive apt-get -y install cmake
       - name: configure
         run: |
           cmake -B ${{github.workspace}}/build
