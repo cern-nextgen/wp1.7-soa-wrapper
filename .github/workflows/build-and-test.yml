@@ -16,12 +16,10 @@ jobs:
         run: |
           apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys A4B469963BF863CC
           apt-get -y update
-          DEBIAN_FRONTEND=noninteractive apt-get -y install cmake
+          DEBIAN_FRONTEND=noninteractive apt -y install cmake clang nvcc
       - name: configure
         run: |
-          pwd
-          ls -la .
-          cmake -B ${{github.workspace}}/build
+          CXX=clang++ CUDACXX=nvcc cmake -B ${{github.workspace}}/build
       - name: build
         run: |
           cmake --build ${{github.workspace}}/build
