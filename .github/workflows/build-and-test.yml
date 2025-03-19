@@ -13,6 +13,7 @@ jobs:
           nvidia-smi
       - name: install
         run: |
+          gpg --keyserver hkp://keyserver.ubuntu.com --recv-keys A4B469963BF863CC
           apt-get -y update
           DEBIAN_FRONTEND=noninteractive apt-get -y install cmake
       - name: configure
@@ -20,7 +21,7 @@ jobs:
           cmake -B ${{github.workspace}}/build
       - name: build
         run: |
-          cmake -B ${{github.workspace}}/build
+          cmake --build ${{github.workspace}}/build
       - name: test
         run: |
           ctest --test-dir ${{github.workspace}}/build
