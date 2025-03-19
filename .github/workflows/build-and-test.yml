@@ -13,7 +13,7 @@ jobs:
           nvidia-smi
       - name: install
         run: |
-          gpg --keyserver hkp://keyserver.ubuntu.com --recv-keys A4B469963BF863CC
+          apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys A4B469963BF863CC
           apt-get -y update
           DEBIAN_FRONTEND=noninteractive apt-get -y install cmake
       - name: configure
