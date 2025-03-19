@@ -18,10 +18,10 @@ jobs:
           DEBIAN_FRONTEND=noninteractive apt-get -y install cmake
       - name: configure
         run: |
-          cmake -B ${{github.workspace}}/build
+          cmake -B build
       - name: build
         run: |
-          cmake --build ${{github.workspace}}/build
+          cmake --build build
       - name: test
         run: |
-          ctest --test-dir ${{github.workspace}}/build
+          ctest --test-dir build
