@@ -8,6 +8,7 @@ jobs:
     runs-on: cern-nextgen-gpu
     container: registry.cern.ch/docker.io/rochaporto/gpu_burn
     steps:
+      - uses: actions/checkout@v4
       - name: nvidia-smi
         run: |
           nvidia-smi
@@ -20,10 +21,10 @@ jobs:
         run: |
           pwd
           ls -la .
-          cmake -B build
+          cmake -B ${{github.workspace}}/build
       - name: build
         run: |
-          cmake --build build
+          cmake --build ${{github.workspace}}/build
       - name: test
         run: |
-          ctest --test-dir build
+          ctest --test-dir ${{github.workspace}}/build
