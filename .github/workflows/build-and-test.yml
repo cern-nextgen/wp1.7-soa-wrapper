@@ -16,7 +16,7 @@ jobs:
         run: |
           apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys A4B469963BF863CC
           apt-get -y update
-          DEBIAN_FRONTEND=noninteractive apt -y install cmake clang nvcc
+          DEBIAN_FRONTEND=noninteractive apt-get -y install cmake clang cuda-nvcc-11-1
       - name: configure
         run: |
           CXX=clang++ CUDACXX=nvcc cmake -B ${{github.workspace}}/build
