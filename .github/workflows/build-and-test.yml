@@ -18,6 +18,8 @@ jobs:
           DEBIAN_FRONTEND=noninteractive apt-get -y install cmake
       - name: configure
         run: |
+          pwd
+          ls -la .
           cmake -B build
       - name: build
         run: |
