@@ -201,7 +201,8 @@ TEST(ManagedMemorySpanWrapper, AoS) {
     assert_equal_to_initialization(N, w);
 
     wrapper::wrapper<kernel::span_type, S, wrapper::layout::aos> w_span(w);
-    kernel::apply(N, w_span);
+    int cuda_error = kernel::apply(N, w_span);
+    EXPECT_EQ(cuda_error, 0);
 
     for (int i = 0; i < N; ++i) EXPECT_EQ(w[i].y, 2 * i);
 }
@@ -217,7 +218,8 @@ TEST(ManagedMemorySpanWrapper, SoA) {
     assert_equal_to_initialization(N, w);
 
     wrapper::wrapper<kernel::span_type, S, wrapper::layout::soa> w_span(w);
-    kernel::apply(N, w_span);
+    int cuda_error = kernel::apply(N, w_span);
+    EXPECT_EQ(cuda_error, 0);
 
     for (int i = 0; i < N; ++i) EXPECT_EQ(w[i].y, 2 * i);
 }
@@ -233,7 +235,8 @@ TEST(DeviceSpanWrapper, AoS) {
     wrapper::wrapper<kernel::device_memory_array, S, wrapper::layout::aos> d_w{N};
     wrapper::wrapper<kernel::span_type, S, wrapper::layout::aos> d_span(d_w);
     kernel::cuda_memcpy(d_span, h_span, N, kernel::cuda_memcpy_kind::cudaMemcpyHostToDevice);
-    kernel::apply(N, d_span);
+    int cuda_error = kernel::apply(N, d_span);
+    EXPECT_EQ(cuda_error, 0);
     kernel::cuda_memcpy(h_span, d_span, N, kernel::cuda_memcpy_kind::cudaMemcpyDeviceToHost);
 
     for (int i = 0; i < N; ++i) EXPECT_EQ(h_w[i].y, 2 * i);
@@ -249,7 +252,8 @@ TEST(DeviceSpanWrapper, SoA) {
     wrapper::wrapper<kernel::device_memory_array, S, wrapper::layout::soa> d_w{{ N, N, N, N }};
     wrapper::wrapper<kernel::span_type, S, wrapper::layout::soa> d_span(d_w);
     kernel::cuda_memcpy(d_span, h_span, N, kernel::cuda_memcpy_kind::cudaMemcpyHostToDevice);
-    kernel::apply(N, d_span);
+    int cuda_error = kernel::apply(N, d_span);
+    EXPECT_EQ(cuda_error, 0);
     kernel::cuda_memcpy(h_span, d_span, N, kernel::cuda_memcpy_kind::cudaMemcpyDeviceToHost);
 
     for (int i = 0; i < N; ++i) EXPECT_EQ(h_w[i].y, 2 * i);

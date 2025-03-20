@@ -52,7 +52,7 @@ template <
     template <template <class> class> class S,
     wrapper::layout L
 >
-void apply(int N, wrapper::wrapper<F, S, L> w);
+int apply(int N, wrapper::wrapper<F, S, L> w);
 
 template<class T>
 struct ManagedMemoryAllocator {

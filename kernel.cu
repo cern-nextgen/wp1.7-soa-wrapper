@@ -53,15 +53,15 @@ template <
     template <template <class> class> class S,
     wrapper::layout L
 >
-void apply(int N, wrapper::wrapper<F, S, L> w) {
+int apply(int N, wrapper::wrapper<F, S, L> w) {
     add<<<1, 1>>>(N, w);
-    print_cuda_error(cudaDeviceSynchronize());
+    return cudaDeviceSynchronize();
 }
 
 // Explicit instatiations needed for unit tests (TODO: Get rid of this)
-template void apply<span_type, S, wrapper::layout::aos>(int N, wrapper::wrapper<span_type, S, wrapper::layout::aos> w);
-template void apply<span_type, S, wrapper::layout::soa>(int N, wrapper::wrapper<span_type, S, wrapper::layout::soa> w);
-template void apply<pointer_type, S, wrapper::layout::aos>(int N, wrapper::wrapper<pointer_type, S, wrapper::layout::aos> w);
-template void apply<pointer_type, S, wrapper::layout::soa>(int N, wrapper::wrapper<pointer_type, S, wrapper::layout::soa> w);
+template int apply<span_type, S, wrapper::layout::aos>(int N, wrapper::wrapper<span_type, S, wrapper::layout::aos> w);
+template int apply<span_type, S, wrapper::layout::soa>(int N, wrapper::wrapper<span_type, S, wrapper::layout::soa> w);
+template int apply<pointer_type, S, wrapper::layout::aos>(int N, wrapper::wrapper<pointer_type, S, wrapper::layout::aos> w);
+template int apply<pointer_type, S, wrapper::layout::soa>(int N, wrapper::wrapper<pointer_type, S, wrapper::layout::soa> w);
 
 }  // namespace kernel
