@@ -6,23 +6,12 @@ on:
 jobs:
   test-gpu:
     runs-on: cern-nextgen-gpu
-    container: docker.io/oliverrietmann/reflmempp-alma:1.1.0
+    container: docker.io/oliverrietmann/github-ci:latest
     steps:
       - uses: actions/checkout@v4
       - name: nvidia-smi
         run: |
           nvidia-smi
-      # - name: install
-      #   run: |
-      #     apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys A4B469963BF863CC
-      #     apt-get -y update
-      #     DEBIAN_FRONTEND=noninteractive apt-get -y install build-essential libtool autoconf unzip wget libssl-dev clang cuda-nvcc-12-8
-      #     wget https://github.com/Kitware/CMake/releases/download/v3.31.6/cmake-3.31.6.tar.gz
-      #     tar -xzvf cmake-3.31.6.tar.gz
-      #     cd cmake-3.31.6/
-      #     ./bootstrap
-      #     make
-      #     make install
       - name: configure
         run: |
           CXX=clang++-18 CUDACXX=nvcc cmake -B ${{github.workspace}}/build
