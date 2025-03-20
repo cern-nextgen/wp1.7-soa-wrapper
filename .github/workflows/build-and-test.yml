@@ -14,10 +14,10 @@ jobs:
           nvidia-smi
       - name: configure
         run: |
-          CXX=clang++-18 CUDACXX=nvcc cmake -B ${{github.workspace}}/build
+          CXX=clang++-18 NVCC_CCBIN=clang-18 CUDACXX=nvcc cmake -B ${{github.workspace}}/build
       - name: build
         run: |
           cmake --build ${{github.workspace}}/build
       - name: test
         run: |
-          ctest --test-dir ${{github.workspace}}/build
+          ctest --test-dir ${{github.workspace}}/build --output-on-failure
