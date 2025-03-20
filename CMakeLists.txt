@@ -17,14 +17,14 @@ add_compile_definitions(_GLIBCXX_USE_CXX11_ABI=0)
 
 add_library(kernel STATIC)
 target_sources(kernel PRIVATE kernel.cu)
-set_target_properties(kernel PROPERTIES CUDA_SEPARABLE_COMPILATION ON CUDA_ARCHITECTURES 89)
+set_target_properties(kernel PROPERTIES CUDA_SEPARABLE_COMPILATION ON CUDA_ARCHITECTURES native)
 target_include_directories(kernel PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 
 # Executable ----------------------------------
 
 add_executable(wrapper main.cpp)
-set_target_properties(wrapper PROPERTIES CUDA_SEPARABLE_COMPILATION ON CUDA_ARCHITECTURES 89)
+set_target_properties(wrapper PROPERTIES CUDA_SEPARABLE_COMPILATION ON CUDA_ARCHITECTURES native)
 target_include_directories(wrapper PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(wrapper PRIVATE kernel)
 
@@ -42,7 +42,7 @@ FetchContent_MakeAvailable(googletest)
 enable_testing()
 
 add_executable(unittests unittests.cpp)
-set_target_properties(unittests PROPERTIES CUDA_SEPARABLE_COMPILATION ON CUDA_ARCHITECTURES 89)
+set_target_properties(unittests PROPERTIES CUDA_SEPARABLE_COMPILATION ON CUDA_ARCHITECTURES native)
 target_include_directories(unittests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(unittests GTest::gtest_main kernel)
 
