@@ -1,6 +1,14 @@
 # wp1.7-soa-wrapper
 Wrapper class to interface with different data layouts (SoA and AoS).
 
+
+## Requirements
+- A machine with an Nvidia GPU and the necessary drivers
+- NVCC compiler and CUDA
+- A C++ compiler, e.g. clang++ or g++
+- CMake
+
+
 ## Build and Run with CMake (Linux)
 Open a Linux terminal, navigate to the cloned directory of this repository, and run the following commands.
 ```
@@ -10,6 +18,7 @@ cmake ..
 make
 ./wrapper
 ```
+
 
 ## TODO
 - Default initializations
