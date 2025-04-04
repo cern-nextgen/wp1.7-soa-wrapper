@@ -6,7 +6,7 @@ on:
 jobs:
   test-gpu:
     runs-on: cern-nextgen-gpu
-    container: docker.io/oliverrietmann/wp1.7-github-ci-gpu:latest
+    container: registry.cern.ch/ngt-wp1.7/wp1.7-github-ci-gpu:latest
     steps:
       - uses: actions/checkout@v4
       - name: nvidia-smi
