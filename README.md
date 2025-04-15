@@ -2,7 +2,8 @@
 Wrapper class with common interface for different data layouts (SoA and AoS).
 
 ## Requirements
-- A machine with an Nvidia GPU and the necessary drivers
+- A machine with an nvidia GPU and the necessary drivers.
+- Retrieve any further dependencies from this [script](https://github.com/cern-nextgen/wp1.7-soa-wrapper-image/blob/main/install.sh).
 
 ## Build and Run the tests (Linux)
 ```
