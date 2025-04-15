@@ -1,12 +1,12 @@
-name: build-and-test
+name: Run unit tests
 
 on:
   workflow_dispatch:
 
 jobs:
-  test-gpu:
+  unit-tests:
     runs-on: cern-nextgen-h100
-    container: registry.cern.ch/ngt-wp1.7/wp1.7-github-ci-gpu:latest
+    container: registry.cern.ch/ngt-wp1.7/wp1.7-soa-wrapper:latest
     steps:
       - uses: actions/checkout@v4
       - name: nvidia-smi
