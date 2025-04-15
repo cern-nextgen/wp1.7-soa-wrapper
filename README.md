@@ -19,8 +19,8 @@ The following container contains the [nvidia container toolkit](https://docs.nvi
 registry.cern.ch/ngt-wp1.7/wp1.7-soa-wrapper:latest
 ```
 The corresponding Dockerfile can be found here [wp1.7-soa-wrapper-image](https://github.com/cern-nextgen/wp1.7-soa-wrapper-image).
-Note that you still need to run the container on a mchine with Nvidia GPU.
-Once you are within the container, you can follow the steps of the section Build and Run the tests (Linux).
+Note that you still need to run the container on a machine with nvidia GPU.
+Once you are within the container, you can follow the steps of the section [Build and Run the tests (Linux)](#build-and-run-the-tests-linux).
 Pull the above image and run it with one of the following commands.
 
 ### Docker
