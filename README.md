@@ -34,7 +34,7 @@ sudo docker run -it --rm --runtime=nvidia --gpus all wp1.7-soa-wrapper:latest ba
 podman run -it --rm --security-opt=label=disable --device nvidia.com/gpu=all wp1.7-soa-wrapper:latest bash
 ```
 
-## Run on kubernetes cluster of NGT
+## Kubernetes Cluster of NGT
 Follow the process described [here](https://ngt.docs.cern.ch/getting-started/), but in Step 6, use the following session.yaml instead.
 ```
 apiVersion: v1
