@@ -40,23 +40,42 @@ Follow the process described [here](https://ngt.docs.cern.ch/getting-started/), 
 apiVersion: v1
 kind: Pod
 metadata:
-  name: session-1
+  name: soa-wrapper
   labels:
     mount-eos: "true"
-    inject-oauth2-token-pipeline: "true"
-  annotations:
-    sidecar.istio.io/inject: "false"
+    mount-cvmfs: "true"
 spec:
   containers:
-  - name: session-1
+  - name: soa-wrapper
     image: registry.cern.ch/ngt-wp1.7/wp1.7-soa-wrapper:latest
     command: ["sleep", "infinity"]
     resources:
       limits:
         nvidia.com/gpu: 1
     securityContext:
-      runAsUser: 0 
+      runAsUser: 0
       runAsGroup: 0
+    volumeMounts:
+    - name: home-volume
+      mountPath: /root
+  volumes:
+  - name: home-volume
+    persistentVolumeClaim:
+      claimName: soa-wrapper-pvc
+  nodeSelector:
+    nvidia.com/gpu.product: NVIDIA-H100-NVL
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: soa-wrapper-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
 ```
 In Step 9, instead of running nvidia-smi, execute the commands in the section [Build and Run](#build-and-run).
 
