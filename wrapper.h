@@ -5,9 +5,6 @@
 
 #include <cstddef>
 
-#include "gpu.h"
-
-
 namespace wrapper {
 
 enum class layout { aos = 0, soa = 1 };
@@ -16,76 +13,52 @@ template <class T>
 using value = T;
 
 template <class T>
-using reference = T&;  // std::vector<T>::reference;
+using reference = T&;
 
 template <class T>
-using const_reference = const T&;  // std::vector<T>::const_reference;
-
-template <template <class> class F_in, template <template <class> class> class S>
-struct proxy_type : S<F_in> {
-    constexpr static std::size_t M = helper::CountMembers<S<value>>();
-    template<template <class> class F_out>
-    GPUd() operator S<F_out>() const {
-        auto id = [](auto& member, std::size_t) -> decltype(auto) { return member; };
-        return helper::apply_to_members<M, S<F_in>, S<F_out>>(*this, id);
-    }
-};
+using const_reference = const T&;
 
 template<
-    template <class> class F,
     template <template <class> class> class S,
+    template <class> class F,
     layout L
 >
 struct wrapper;
 
-template <template <class> class F, template <template <class> class> class S>
-struct wrapper<F, S, layout::aos> {
-    using value_type = S<value>;
-    using array_type = F<value_type>;
-
-    constexpr static std::size_t M = helper::CountMembers<value_type>();
+template <template <template <class> class> class S, template <class> class F>
+struct wrapper<S, F, layout::aos> {
+    F<S<value>> data;
 
     template <template <class> class F_out>
-    operator wrapper<F_out, S, layout::aos>() { return {data}; };
+    constexpr operator wrapper<S, F_out, layout::aos>() { return {data}; };
 
-    array_type data;
-
-    GPUd() value_type& get_reference(std::size_t i) { return data[i]; }
-    GPUd() const value_type& get_reference(std::size_t i) const { return data[i]; }
-
-    GPUd() proxy_type<reference, S> operator[](std::size_t i) {
-        auto id = [](auto& member, std::size_t) -> decltype(auto) { return member; };
-        return helper::apply_to_members<M, value_type&, proxy_type<reference, S>>(data[i], id);
-    }
-    GPUd() proxy_type<const_reference, S> operator[](std::size_t i) const {
-        auto id = [](const auto& member, std::size_t) -> decltype(auto) { return member; };
-        return helper::apply_to_members<M, const value_type&, proxy_type<const_reference, S>>(data[i], id);
-    }
+    constexpr S<reference> operator[](std::size_t i) { return data[i]; }
+    constexpr S<const_reference> operator[](std::size_t i) const { return data[i]; }
 };
 
-template <template <class> class F, template <template <class> class> class S>
-struct wrapper<F, S, layout::soa> {
-    using value_type = S<value>;
-    using array_type = S<F>;
-
-    constexpr static std::size_t M = helper::CountMembers<value_type>();
-
+template <template <template <class> class> class S, template <class> class F>
+struct wrapper<S, F, layout::soa> : S<F> {
     template <template <class> class F_out>
-    operator wrapper<F_out, S, layout::soa>() {
-        auto id = [](auto& member, std::size_t) -> decltype(auto) { return member; };
-        return helper::apply_to_members<M, array_type&, wrapper<F_out, S, layout::soa>>(data, id);
+    constexpr operator wrapper<S, F_out, layout::soa>() { return {*this}; };
+
+    constexpr S<reference> operator[](std::size_t i) {
+        return helper::invoke_on_members<reference, F>(*this, evaluate_at{i});
+    }
+    constexpr S<const_reference> operator[](std::size_t i) const {
+        return helper::invoke_on_members<const_reference, F>(*this, evaluate_at{i});
+    }
+
+    private:
+
+    struct evaluate_at {
+        std::size_t i;
+
+        template <template <class> class F_in, class T>
+        constexpr reference<T> operator()(F_in<T> & t) const { return t[i]; }
+        
+        template <template <class> class F_in, class T>
+        constexpr const_reference<T> operator()(const F_in<T> & t) const { return t[i]; }
     };
-
-    array_type data;
-
-    GPUd() proxy_type<reference, S> operator[](std::size_t i) {
-        auto evaluate_at = [i](auto& member, std::size_t) -> decltype(auto) { return member[i]; };
-        return helper::apply_to_members<M, array_type&, proxy_type<reference, S>>(data, evaluate_at);
-    }
-    GPUd() proxy_type<const_reference, S> operator[](std::size_t i) const {
-        auto evaluate_at = [i](const auto& member, std::size_t) -> decltype(auto) { return member[i]; };
-        return helper::apply_to_members<M, const array_type&, proxy_type<const_reference, S>>(data, evaluate_at);
-    }
 };
 
 }  // namespace wrapper

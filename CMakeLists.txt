@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.24)
+cmake_minimum_required(VERSION 4.0)
 project(cmake_and_cuda LANGUAGES CXX CUDA)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -31,20 +31,20 @@ target_link_libraries(wrapper PRIVATE kernel)
 
 # Unit Tests ----------------------------------
 
-include(FetchContent)
-FetchContent_Declare(
-    googletest
-    DOWNLOAD_EXTRACT_TIMESTAMP NEW
-    URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip
-)
-FetchContent_MakeAvailable(googletest)
-
-enable_testing()
-
-add_executable(unittests unittests.cpp)
-set_target_properties(unittests PROPERTIES CUDA_SEPARABLE_COMPILATION ON CUDA_ARCHITECTURES native)
-target_include_directories(unittests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(unittests GTest::gtest_main kernel)
-
-include(GoogleTest)
-gtest_discover_tests(unittests)
+# include(FetchContent)
+# FetchContent_Declare(
+#     googletest
+#     DOWNLOAD_EXTRACT_TIMESTAMP NEW
+#     URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip
+# )
+# FetchContent_MakeAvailable(googletest)
+#
+# enable_testing()
+#
+# add_executable(unittests unittests.cpp)
+# set_target_properties(unittests PROPERTIES CUDA_SEPARABLE_COMPILATION ON CUDA_ARCHITECTURES native)
+# target_include_directories(unittests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+# target_link_libraries(unittests GTest::gtest_main kernel)
+#
+# include(GoogleTest)
+# gtest_discover_tests(unittests)

@@ -21,7 +21,7 @@ int cuda_memcpy(void* d_data, void* h_data, std::size_t size, cuda_memcpy_kind k
 template <class T>
 using span_type = std::span<T>;
 
-template <template <template <class> class> class S>
+/** template <template <template <class> class> class S>
 void cuda_memcpy(
     wrapper::wrapper<span_type, S, wrapper::layout::aos> dst,
     wrapper::wrapper<span_type, S, wrapper::layout::aos> src,
@@ -42,19 +42,18 @@ void cuda_memcpy(
     };
     using array_type = wrapper::wrapper<span_type, S, wrapper::layout::soa>::array_type;
     helper::apply_to_member_pairs<M, array_type>(dst.data, src.data, memcpy);
-}
+}*/
 
 template <class T>
 using pointer_type = T*;
 
 template <
-    template <class> class F,
     template <template <class> class> class S,
     wrapper::layout L
 >
-int apply(int N, wrapper::wrapper<F, S, L> w);
+int apply(int N, wrapper::wrapper<S, std::span, L> w);
 
-template<class T>
+/*template<class T>
 struct ManagedMemoryAllocator {
     using value_type = T;
     ManagedMemoryAllocator() = default;
@@ -69,18 +68,17 @@ struct ManagedMemoryAllocator {
     }
 
     void deallocate(T* p, std::size_t n) noexcept { cuda_free(p); }
-};
+};*/
 
 template <class T>
 struct device_memory_array {
-    device_memory_array(std::size_t N) : ptr(nullptr, [](T * ptr){ kernel::cuda_free(ptr); }), N{N} {
-        cuda_malloc((void **) &ptr, N * sizeof(T));
-    }
-    operator std::span<T>() { return { ptr.get(), ptr.get() + N }; }
-    T operator[](std::size_t i) const { return *(ptr.get() + i); }
-    T& operator[](std::size_t i) { return *(ptr.get() + i); }
-    std::shared_ptr<T> ptr;
-    std::size_t N;
+    device_memory_array(int N) : ptr(), N{N} { cuda_malloc((void **) &ptr, N * sizeof(T)); }
+    ~device_memory_array() { if (ptr != nullptr) kernel::cuda_free(ptr); }
+    constexpr operator std::span<T>() { return { ptr, ptr + N }; }
+    constexpr T& operator[](int i) { return ptr[i]; }
+    constexpr const T& operator[](int i) const { return ptr[i]; }
+    T* ptr;
+    int N;
 };
 
 }  // namespace kernel
