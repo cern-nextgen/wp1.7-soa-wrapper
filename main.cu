@@ -3,7 +3,7 @@
 #include <span>
 
 #include "skeleton.h"  // Defines the struct "S"
-#include "wrapper.h"   // Contains the namespace "wrapper"
+#include "wrapper.h"
 
 template <wrapper::layout L>
 void print(std::ostream& os, wrapper::wrapper<S, std::span, L> w) {
@@ -23,8 +23,8 @@ int main() {
         {0, 5}, {1, 6}, {{2.0, 3.0}, {7.0, 8.0}}, {4.0, 9.0}
     }};
 
-    using span_wrapper = wrapper::wrapper<S, std::span, wrapper::layout::soa>;
-    print(std::cout, static_cast<span_wrapper>(w_soa));  // Template argument deduction fails when passing w_aos or w_soa directly
+    wrapper::wrapper<S, std::span, wrapper::layout::soa> w_span(w_soa);
+    print(std::cout, w_span);  // Template argument deduction fails when passing w_aos or w_soa directly
 
     return 0;
 }

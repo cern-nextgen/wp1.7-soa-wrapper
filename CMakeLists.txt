@@ -12,21 +12,11 @@ set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-relaxed-constexpr")
 # Avoid linker error "undefined reference to std::__cxx11::basic_string"
 add_compile_definitions(_GLIBCXX_USE_CXX11_ABI=0)
 
-
-# CUDA ----------------------------------------
-
-add_library(kernel STATIC)
-target_sources(kernel PRIVATE kernel.cu)
-set_target_properties(kernel PROPERTIES CUDA_SEPARABLE_COMPILATION ON CUDA_ARCHITECTURES native)
-target_include_directories(kernel PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-
-
 # Executable ----------------------------------
 
-add_executable(wrapper main.cpp)
+add_executable(wrapper main.cu)
 set_target_properties(wrapper PROPERTIES CUDA_SEPARABLE_COMPILATION ON CUDA_ARCHITECTURES native)
 target_include_directories(wrapper PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(wrapper PRIVATE kernel)
 
 
 # Unit Tests ----------------------------------
@@ -41,10 +31,10 @@ FetchContent_MakeAvailable(googletest)
 
 enable_testing()
 
-add_executable(unittests unittests.cpp)
+add_executable(unittests unittests.cu)
 set_target_properties(unittests PROPERTIES CUDA_SEPARABLE_COMPILATION ON CUDA_ARCHITECTURES native)
 target_include_directories(unittests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(unittests GTest::gtest_main kernel)
+target_link_libraries(unittests GTest::gtest_main)
 
 include(GoogleTest)
 gtest_discover_tests(unittests)
