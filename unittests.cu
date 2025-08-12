@@ -65,9 +65,7 @@ TEST(Wrapper, AoS) {
     debug::counters expected_count = {0, 1, 0, 0, 0, 0, 1};
     {
         std::size_t N = 18;
-        wrapper::wrapper<S, debug::vector, wrapper::layout::aos> w{
-            debug::vector<S<wrapper::value>>(N)
-        };
+        wrapper::wrapper<S, debug::vector, wrapper::layout::aos> w{N};
         test_random_access(N, w);
     }
     EXPECT_EQ(expected_count, debug::call_counter::count);
@@ -77,14 +75,7 @@ TEST(Wrapper, SoA) {
     debug::counters expected_count = {0, 4, 0, 0, 0, 0, 4};
     {
         std::size_t N = 18;
-        wrapper::wrapper<S, debug::vector, wrapper::layout::soa> w{
-            S<debug::vector>{
-                debug::vector<int>(N),
-                debug::vector<int>(N),
-                debug::vector<Point2D>(N),
-                debug::vector<double>(N)
-            }
-        };
+        wrapper::wrapper<S, debug::vector, wrapper::layout::soa> w{N, N, N, N};
         test_random_access(N, w);
     }
     EXPECT_EQ(expected_count, debug::call_counter::count);

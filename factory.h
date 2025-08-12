@@ -86,7 +86,7 @@ wrapper::wrapper<S, pmr::vector, L> buffer_wrapper(char* buffer_ptr, std::size_t
 struct call_constructor {
     std::size_t N;
     template <template <class> class F, class T>
-    constexpr F<T> operator()(const F<T> &) const { return F<T>(N); }
+    constexpr F<T> operator()(const F<T> &) const { return F<T>{N}; }
 };
 
 template <
@@ -95,9 +95,8 @@ template <
     wrapper::layout L
 >
 wrapper::wrapper<S, F, L> default_wrapper(std::size_t N) {
-    if constexpr (L == wrapper::layout::aos) {
-        return { F<S<wrapper::value>>(N) };
-    } else if constexpr (L == wrapper::layout::soa) {
+    if constexpr (L == wrapper::layout::aos) return {{N}};
+    else if constexpr (L == wrapper::layout::soa) {
         return { helper::invoke_on_members<F>(S<F>{}, call_constructor{N}) };
     }
 }

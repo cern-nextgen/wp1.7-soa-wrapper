@@ -10,13 +10,13 @@ namespace debug {
 struct counters {
     void reset() { *this = counters(); }
     bool operator==(const counters&) const = default;
-    std::size_t default_constructor = 0;
-    std::size_t nondefault_constructor = 0;
-    std::size_t copy_constructor = 0;
-    std::size_t copy_assignment = 0;
-    std::size_t move_constructor = 0;
-    std::size_t move_assignment = 0;
-    std::size_t destructor = 0;
+    char default_constructor = 0;
+    char nondefault_constructor = 0;
+    char copy_constructor = 0;
+    char copy_assignment = 0;
+    char move_constructor = 0;
+    char move_assignment = 0;
+    char destructor = 0;
 };
 
 struct call_counter  {
