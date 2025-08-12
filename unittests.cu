@@ -142,7 +142,7 @@ TEST(BufferWrapper, AoS) {
     debug::counters expected_count = {0, 0, 0, 0, 0, 0, 0};
     {
         std::size_t N = 18;
-        std::size_t bytes = 1024;
+        constexpr std::size_t bytes = 1024;
         char buffer[bytes];
         auto w = factory::buffer_wrapper<S, wrapper::layout::aos>(buffer, bytes);
         test_random_access(N, w);
@@ -154,7 +154,7 @@ TEST(BufferWrapper, SoA) {
     debug::counters expected_count = {0, 0, 0, 0, 0, 0, 0};
     {
         std::size_t N = 18;
-        std::size_t bytes = 1024;
+        constexpr std::size_t bytes = 1024;
         char buffer[bytes];
         auto w = factory::buffer_wrapper<S, wrapper::layout::soa>(buffer, bytes);
         test_random_access(N, w);
