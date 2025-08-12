@@ -3,6 +3,7 @@
 
 #include <ostream>
 #include <vector>
+#include <span>
 
 namespace debug {
 
@@ -48,6 +49,7 @@ template <class T>
 struct vector : public std::vector<T>, public call_counter {
     vector() : std::vector<T>(), call_counter() {}
     vector(std::size_t size) : std::vector<T>(size), call_counter(size) {}
+    constexpr operator std::span<T>() { return { this->data(), this->data() + this->size() }; }
 };
 
 }  // namespace debug

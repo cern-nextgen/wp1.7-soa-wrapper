@@ -23,7 +23,8 @@ int main() {
         {0, 5}, {1, 6}, {{2.0, 3.0}, {7.0, 8.0}}, {4.0, 9.0}
     }};
 
-    print(std::cout, static_cast<wrapper::wrapper<S, std::span, wrapper::layout::soa>>(w_soa));  // Template argument deduction fails when passing w_aos or w_soa directly
+    using span_wrapper = wrapper::wrapper<S, std::span, wrapper::layout::soa>;
+    print(std::cout, static_cast<span_wrapper>(w_soa));  // Template argument deduction fails when passing w_aos or w_soa directly
 
     return 0;
 }

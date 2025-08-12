@@ -26,7 +26,7 @@ struct vector : std::vector<T, allocator::BufferAllocator<T>> {
 struct Buffer {
     template <class T>
     operator allocator::BufferAllocator<T>() { return {begin, size}; }
-    std::byte * begin;
+    char* begin;
     std::size_t size;
 };
 
@@ -59,7 +59,7 @@ constexpr std::size_t get_size_in_bytes() {
 }
 
 template <template <template <class> class> class S, wrapper::layout L>
-wrapper::wrapper<S, pmr::vector, L> buffer_wrapper(std::byte* buffer_ptr, std::size_t bytes) {
+wrapper::wrapper<S, pmr::vector, L> buffer_wrapper(char* buffer_ptr, std::size_t bytes) {
     if constexpr (L == wrapper::layout::aos) {
         return {allocator::BufferAllocator<S<wrapper::value>>(buffer_ptr, bytes)};
     } else if constexpr (L == wrapper::layout::soa) {
@@ -83,33 +83,24 @@ wrapper::wrapper<S, pmr::vector, L> buffer_wrapper(std::byte* buffer_ptr, std::s
     }
 }
 
-/*template <
-    template <class> class F,
-    template <template <class> class> class S
->
-wrapper::wrapper<F, S, wrapper::layout::aos> default_aos_wrapper(std::size_t N) {
-    return { F<S<wrapper::value>>(N) };
-}
+struct call_constructor {
+    std::size_t N;
+    template <template <class> class F, class T>
+    constexpr F<T> operator()(const F<T> &) const { return F<T>(N); }
+};
 
 template <
-    template <class> class F,
-    template <template <class> class> class S
->
-wrapper::wrapper<F, S, wrapper::layout::soa> default_soa_wrapper(std::size_t N) {
-    constexpr static std::size_t M = helper::CountMembers<S<wrapper::value>>();
-    auto forward_to_F_constructor = [N](auto member, std::size_t) -> decltype(auto) { return F<decltype(member)>(N); };
-    return { helper::apply_to_members<M, S<wrapper::value>, S<F>>(S<wrapper::value>(), forward_to_F_constructor)  };
-}
-
-template <
-    template <class> class F,
     template <template <class> class> class S,
+    template <class> class F,
     wrapper::layout L
 >
-wrapper::wrapper<F, S, L> default_wrapper(std::size_t N) {
-    if constexpr (L == wrapper::layout::aos) return default_aos_wrapper<F, S>(N);
-    else if constexpr (L == wrapper::layout::soa) return default_soa_wrapper<F, S>(N);
-}*/
+wrapper::wrapper<S, F, L> default_wrapper(std::size_t N) {
+    if constexpr (L == wrapper::layout::aos) {
+        return { F<S<wrapper::value>>(N) };
+    } else if constexpr (L == wrapper::layout::soa) {
+        return { helper::invoke_on_members<F>(S<F>{}, call_constructor{N}) };
+    }
+}
 
 }  // namespace factory
 

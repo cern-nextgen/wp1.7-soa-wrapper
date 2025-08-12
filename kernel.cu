@@ -36,6 +36,7 @@ int cuda_malloc(void** d_data, std::size_t size) { return cudaMalloc(d_data, siz
     }
     print_cuda_error(err);
     return err;
+}
 */
 
 template <

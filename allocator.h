@@ -1,37 +1,40 @@
 #ifndef ALLOCATOR_H
 #define ALLOCATOR_H
 
+#include <cstddef>
 #include <memory>
-#include <memory_resource>
-#include <stdexcept>
 
 namespace allocator {
 
-struct BufferResource : public std::pmr::memory_resource {
-    char* buffer_begin;
-    char* buffer_end;
-    char* current;
+template <class T>
+struct BufferAllocator {
+    using value_type = T;
 
-    BufferResource(char* buffer, std::size_t bytes)
-        : buffer_begin(buffer), buffer_end(buffer + bytes), current(buffer) {}
+    BufferAllocator(char* buffer, std::size_t size)
+        : buffer_(buffer), size_(size), offset_(0) {}
 
-    virtual ~BufferResource() {}
+    T* allocate(std::size_t n) {
+        std::size_t alignment = alignof(T);
+        std::size_t bytes = n * sizeof(T);
+        std::size_t aligned_offset = (offset_ + alignment - 1) & ~(alignment - 1);
 
-protected:
-    void* do_allocate(std::size_t bytes, std::size_t alignment) override {
-        std::size_t space = buffer_end - current;
-        void* aligned = std::align(alignment, bytes, reinterpret_cast<void*&>(current), space);
-        if (!aligned) throw std::bad_alloc();
-        current += bytes;
-        return aligned;
+        if (aligned_offset + bytes > size_) throw std::bad_alloc();
+
+        T* ptr = std::launder(reinterpret_cast<T*>(buffer_ + aligned_offset));
+        offset_ = aligned_offset + bytes;
+        return ptr;
     }
 
-    void do_deallocate(void*, std::size_t, std::size_t) override {}
+    void deallocate(T*, std::size_t) { }
 
-    bool do_is_equal(const std::pmr::memory_resource& other) const noexcept override {
-        return this == &other;
-    }
+    template <typename U>
+    struct rebind { using other = BufferAllocator<U>; };
+
+    char* buffer_;
+    std::size_t size_;
+    std::size_t offset_;
 };
+
 
 }  // namespace allocator
 
