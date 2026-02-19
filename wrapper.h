@@ -1,6 +1,8 @@
 #ifndef WRAPPER_H
 #define WRAPPER_H
 
+#include <vector>
+
 namespace wrapper {
 
 using size_t = decltype(sizeof(0));
@@ -81,15 +83,20 @@ template <
     template <template <class> class> class S,
     template <class> class F
 >
-struct wrapper<S, F, layout::aos> {
-    F<S<value>> data;
-    using Data = F<S<value>>;
+struct wrapper<S, F, layout::aos> : public F<S<value>> {
+    static constexpr layout layout_type = layout::aos;
+    using Base = F<S<value>>;
 
-    constexpr wrapper<S, reference> operator[] (size_t i) { return data[i]; }
-    constexpr wrapper<S, const_reference> operator[] (size_t i) const { return data[i]; }
+    constexpr wrapper() = default;
+    constexpr wrapper(Base b) : Base(static_cast<Base&&>(b)) {}
+    template <template <class> class F_other>
+    constexpr wrapper(wrapper<S, F_other, layout::aos>& other) : Base(other) {}
 
-    constexpr wrapper<S, reference> operator*() { return operator[](0); }
-    constexpr wrapper<S, const_reference> operator*(ptrdiff_t) const { return operator[](0); }
+    constexpr auto operator[] (size_t i) { return Base::operator[](i); }
+    constexpr auto operator[] (size_t i) const { return Base::operator[](i); }
+
+    constexpr auto operator*() { return operator[](0); }
+    constexpr auto operator*(ptrdiff_t) const { return operator[](0); }
 };
 
 template <
@@ -97,6 +104,7 @@ template <
     template <class> class F
 >
 struct wrapper<S, F, layout::soa> : public S<F> {
+    static constexpr layout layout_type = layout::soa;
     using Base = S<F>;
 
     constexpr wrapper() = default;
