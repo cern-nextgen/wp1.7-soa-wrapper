@@ -3,27 +3,38 @@
 
 #include "wrapper.h"
 
-namespace skeleton {
+namespace Skeleton {
 
+template <template <class> class F>
 struct Point2D {
-    double x, y;
-    bool operator==(const skeleton::Point2D& other) const { return x == other.x && y == other.y; }
+    WRAPPER_APPLY_UNARY(x, y)
+    WRAPPER_APPLY_BINARY(Point2D, WRAPPER_EXPAND(x), WRAPPER_EXPAND(y))
+
+    F<uint32_t> x, y;
+    constexpr uint32_t abs2() const { return x * x + y * y; }
 };
 
 template <template <class> class F>
-struct S {
-    WRAPPER_APPLY_UNARY(x, y, point, identifier)
-    WRAPPER_APPLY_BINARY(S, WRAPPER_EXPAND(x), WRAPPER_EXPAND(y), WRAPPER_EXPAND(point), WRAPPER_EXPAND(identifier))
+struct Point3D {
+    WRAPPER_APPLY_UNARY(point2d, z)
+    WRAPPER_APPLY_BINARY(Point3D, WRAPPER_EXPAND(point2d), WRAPPER_EXPAND(z))
 
-    F<int> x;
-    F<int> y;
-    F<Point2D> point;
-    F<double> identifier;  // std::string causes linker error
+    wrapper::wrapper<Point2D, F> point2d;
+    F<uint32_t> z;
 
-    constexpr int abs2() const { return x * x + y * y; }
-    constexpr int& getX() { return x; }
-    constexpr const int& getX() const { return x; }
-    constexpr void setX(int x_new) { x = x_new; }
+    constexpr uint32_t abs2() const { return point2d.abs2() + z * z; }
+    constexpr uint32_t& getZ() { return z; }
+    constexpr const uint32_t& getZ() const { return z; }
+    constexpr void setZ(uint32_t z_new) { z = z_new; }
+};
+
+template <template <class> class F>
+struct Position {
+    WRAPPER_APPLY_UNARY(mean, covariance)
+    WRAPPER_APPLY_BINARY(Position, WRAPPER_EXPAND(mean), WRAPPER_EXPAND(covariance))
+
+    wrapper::wrapper<Point3D, F> mean;
+    F<uint16_t[3][3]> covariance;
 };
 
 }

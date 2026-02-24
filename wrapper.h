@@ -99,6 +99,36 @@ struct wrapper<S, F, layout::aos> : public F<S<value>> {
     constexpr wrapper<S, const_reference> operator*(ptrdiff_t) const { return operator[](0); }
 };
 
+template <template <template <class> class> class S>
+struct wrapper<S, pointer, layout::aos> {
+    static constexpr layout layout_type = layout::aos;
+
+    pointer<S<value>> data;
+    using Data = pointer<S<value>>;
+
+    operator Data&() { return data; }
+    operator const Data&() const { return data; }
+
+    constexpr bool operator==(const wrapper& other) const { return data == other.data; }
+    constexpr bool operator!=(const wrapper& other) const { return data != other.data; }
+    constexpr bool operator<(const wrapper& other) const { return data < other.data; }
+
+    constexpr wrapper operator+(ptrdiff_t i) const { return {data + i}; }
+    constexpr wrapper operator-(ptrdiff_t i) const { return {data - i}; }
+    constexpr ptrdiff_t operator-(const wrapper& other) const { return {data - other.data}; }
+
+    constexpr wrapper& operator++() { return {++data}; }
+    constexpr wrapper& operator+=(ptrdiff_t i) { return {data += i}; }
+    constexpr wrapper& operator--() { return {--data}; }
+    constexpr wrapper& operator-=(ptrdiff_t i) { return {data -= i}; }
+
+    constexpr wrapper<S, reference> operator[] (size_t i) { return data[i]; }
+    constexpr wrapper<S, const_reference> operator[] (size_t i) const { return data[i]; }
+
+    constexpr wrapper<S, reference> operator*() { return *data; }
+    constexpr wrapper<S, const_reference> operator*(ptrdiff_t) const { return *data; }
+};
+
 template <
     template <template <class> class> class S,
     template <class> class F
