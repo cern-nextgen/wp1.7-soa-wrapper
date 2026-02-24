@@ -86,17 +86,17 @@ template <
 struct wrapper<S, F, layout::aos> : public F<S<value>> {
     static constexpr layout layout_type = layout::aos;
     using Base = F<S<value>>;
+    using Base::Base;
 
     constexpr wrapper() = default;
-    constexpr wrapper(Base b) : Base(static_cast<Base&&>(b)) {}
     template <template <class> class F_other>
     constexpr wrapper(wrapper<S, F_other, layout::aos>& other) : Base(other) {}
 
-    constexpr auto operator[] (size_t i) { return Base::operator[](i); }
-    constexpr auto operator[] (size_t i) const { return Base::operator[](i); }
+    constexpr wrapper<S, reference> operator[] (size_t i) { return Base::operator[](i); }
+    constexpr wrapper<S, const_reference> operator[] (size_t i) const { return Base::operator[](i); }
 
-    constexpr auto operator*() { return operator[](0); }
-    constexpr auto operator*(ptrdiff_t) const { return operator[](0); }
+    constexpr wrapper<S, reference> operator*() { return operator[](0); }
+    constexpr wrapper<S, const_reference> operator*(ptrdiff_t) const { return operator[](0); }
 };
 
 template <
@@ -106,6 +106,7 @@ template <
 struct wrapper<S, F, layout::soa> : public S<F> {
     static constexpr layout layout_type = layout::soa;
     using Base = S<F>;
+    using Base::Base;
 
     constexpr wrapper() = default;
     constexpr wrapper(Base b) : Base{static_cast<Base&&>(b)} {}

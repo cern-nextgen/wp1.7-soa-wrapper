@@ -42,15 +42,19 @@ void print(std::ostream& os, wrapper::wrapper<skeleton::S, std::span, wrapper::l
 using test = wrapper::wrapper<skeleton::S, std::span, wrapper::layout::aos>;
 
 int main() {
-    wrapper::wrapper<skeleton::S, std::vector, wrapper::layout::aos> w_aos{{
+    wrapper::wrapper<skeleton::S, std::vector, wrapper::layout::aos> w_aos{
         {0, 1, {2.0, 3.0}, 4.0},
         {5, 6, {7.0, 8.0}, 9.0}
-    }};
+    };
     wrapper::wrapper<skeleton::S, std::span, wrapper::layout::aos> w_aos_span{w_aos};
 
-    wrapper::wrapper<skeleton::S, std::vector, wrapper::layout::soa> w_soa{{
+    skeleton::S<std::vector> s_soa_temp{
         {0, 5}, {1, 6}, {{2.0, 3.0}, {7.0, 8.0}}, {4.0, 9.0}
-    }};
+    };
+
+    wrapper::wrapper<skeleton::S, std::vector, wrapper::layout::soa> w_soa{
+        {{0, 5}, {1, 6}, {{2.0, 3.0}, {7.0, 8.0}}, {4.0, 9.0}}
+    };
     wrapper::wrapper<skeleton::S, std::span, wrapper::layout::soa> w_soa_span{w_soa};
 
     print<w_aos.layout_type>(std::cout, w_aos);

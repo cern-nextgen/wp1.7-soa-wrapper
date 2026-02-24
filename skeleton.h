@@ -5,7 +5,10 @@
 
 namespace skeleton {
 
-struct Point2D { double x, y; };
+struct Point2D {
+    double x, y;
+    bool operator==(const skeleton::Point2D& other) const { return x == other.x && y == other.y; }
+};
 
 template <template <class> class F>
 struct S {
