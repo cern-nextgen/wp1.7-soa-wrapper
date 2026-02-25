@@ -13,15 +13,41 @@ jobs:
     container: registry.cern.ch/ngt-wp1.7/wp1.7-soa-wrapper@sha256:3453bacbd28c3aa0cec4051e28a80181120cd451abd2f5b00d890a220aa75b31
     steps:
       - uses: actions/checkout@v4
-      - name: nvidia-smi
+      - name: cpu_gcc
+        env:
+          CXX: g++
+          CC: gcc
+        run: |
+          cmake -B ${{github.workspace}}/build -DENABLE_CUDA=OFF
+          cmake --build ${{github.workspace}}/build
+          ctest --test-dir ${{github.workspace}}/build/tests --output-on-failure
+      - name: cpu_clang
+        env:
+          CXX: clang++
+          CC: clang
+        run: |
+          cmake -B ${{github.workspace}}/build -DENABLE_CUDA=OFF
+          cmake --build ${{github.workspace}}/build
+          ctest --test-dir ${{github.workspace}}/build/tests --output-on-failure
+      - name: gpu_gcc
+        env:
+          CXX: g++
+          CC: gcc
+          NVCC_CCBIN: gcc
+          CUDACXX: nvcc
         run: |
           nvidia-smi
-      - name: configure
-        run: |
-          CXX=clang++ CC=clang NVCC_CCBIN=clang CUDACXX=nvcc cmake -B ${{github.workspace}}/build
-      - name: build
-        run: |
+          cmake -B ${{github.workspace}}/build -DENABLE_CPU=OFF
           cmake --build ${{github.workspace}}/build
-      - name: test
+          ctest --test-dir ${{github.workspace}}/build/tests --output-on-failure
+      - name: gpu_clang
+        env:
+          CXX: clang++
+          CC: clang
+          NVCC_CCBIN: clang
+          CUDACXX: nvcc
         run: |
+          nvidia-smi
+          cmake -B ${{github.workspace}}/build -DENABLE_CPU=OFF
+          cmake --build ${{github.workspace}}/build
           ctest --test-dir ${{github.workspace}}/build/tests --output-on-failure
