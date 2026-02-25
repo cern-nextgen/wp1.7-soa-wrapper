@@ -3,17 +3,7 @@
 
 #include <span>
 
-#include "skeleton.h"
-#include "wrapper.h"
-
 namespace kernel {
-
-template <wrapper::layout L>
-__global__ void add(int N, wrapper::wrapper<Skeleton::Point3D, std::span, L> w) {
-    int index = blockIdx.x * blockDim.x + threadIdx.x;
-    int stride = blockDim.x * gridDim.x;
-    for (int i = index; i < N; i += stride) w[i].z = w[i].point2d.x + w[i].point2d.y;
-}
 
 template <class T>
 struct unique_dev_ptr {
