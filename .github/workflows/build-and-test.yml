@@ -24,4 +24,4 @@ jobs:
           cmake --build ${{github.workspace}}/build
       - name: test
         run: |
-          ctest --test-dir ${{github.workspace}}/build --output-on-failure
+          ctest --test-dir ${{github.workspace}}/build/tests --output-on-failure
