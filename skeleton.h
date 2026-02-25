@@ -10,8 +10,8 @@ struct Point2D {
     WRAPPER_APPLY_UNARY(x, y)
     WRAPPER_APPLY_BINARY(Point2D, WRAPPER_EXPAND(x), WRAPPER_EXPAND(y))
 
-    F<uint32_t> x, y;
-    constexpr uint32_t abs2() const { return x * x + y * y; }
+    F<int32_t> x, y;
+    constexpr int32_t abs2() const { return x * x + y * y; }
 };
 
 template <template <class> class F>
@@ -20,12 +20,12 @@ struct Point3D {
     WRAPPER_APPLY_BINARY(Point3D, WRAPPER_EXPAND(point2d), WRAPPER_EXPAND(z))
 
     wrapper::wrapper<Point2D, F> point2d;
-    F<uint32_t> z;
+    F<int32_t> z;
 
-    constexpr uint32_t abs2() const { return point2d.abs2() + z * z; }
-    constexpr uint32_t& getZ() { return z; }
-    constexpr const uint32_t& getZ() const { return z; }
-    constexpr void setZ(uint32_t z_new) { z = z_new; }
+    constexpr int32_t abs2() const { return point2d.abs2() + z * z; }
+    constexpr int32_t& getZ() { return z; }
+    constexpr const int32_t& getZ() const { return z; }
+    constexpr void setZ(int32_t z_new) { z = z_new; }
 };
 
 template <template <class> class F>
