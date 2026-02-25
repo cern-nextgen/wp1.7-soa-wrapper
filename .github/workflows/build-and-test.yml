@@ -21,6 +21,7 @@ jobs:
           cmake -B ${{github.workspace}}/build -DENABLE_CUDA=OFF
           cmake --build ${{github.workspace}}/build
           ctest --test-dir ${{github.workspace}}/build/tests --output-on-failure
+          rm -rf ${{github.workspace}}/build
       - name: cpu_clang
         env:
           CXX: clang++
@@ -29,6 +30,7 @@ jobs:
           cmake -B ${{github.workspace}}/build -DENABLE_CUDA=OFF
           cmake --build ${{github.workspace}}/build
           ctest --test-dir ${{github.workspace}}/build/tests --output-on-failure
+          rm -rf ${{github.workspace}}/build
       - name: gpu_gcc
         env:
           CXX: g++
@@ -40,6 +42,7 @@ jobs:
           cmake -B ${{github.workspace}}/build -DENABLE_CPU=OFF
           cmake --build ${{github.workspace}}/build
           ctest --test-dir ${{github.workspace}}/build/tests --output-on-failure
+          rm -rf ${{github.workspace}}/build
       - name: gpu_clang
         env:
           CXX: clang++
@@ -51,3 +54,4 @@ jobs:
           cmake -B ${{github.workspace}}/build -DENABLE_CPU=OFF
           cmake --build ${{github.workspace}}/build
           ctest --test-dir ${{github.workspace}}/build/tests --output-on-failure
+          rm -rf ${{github.workspace}}/build
