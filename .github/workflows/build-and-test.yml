@@ -10,7 +10,7 @@ on:
 jobs:
   unit-tests:
     runs-on: cern-nextgen-h100
-    container: registry.cern.ch/ngt-wp1.7/wp1.7-soa-wrapper:latest
+    container: registry.cern.ch/ngt-wp1.7/wp1.7-soa-wrapper@sha256:3453bacbd28c3aa0cec4051e28a80181120cd451abd2f5b00d890a220aa75b31
     steps:
       - uses: actions/checkout@v4
       - name: nvidia-smi
