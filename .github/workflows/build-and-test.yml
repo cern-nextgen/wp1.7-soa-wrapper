@@ -17,19 +17,21 @@ jobs:
         env:
           CXX: g++
           CC: gcc
+          TEST_DIR: tests/cpu
         run: |
-          cmake -B ${{github.workspace}}/build -DENABLE_CUDA=OFF
-          cmake --build ${{github.workspace}}/build
-          ctest --test-dir ${{github.workspace}}/build/tests --output-on-failure
+          cmake -B ${{github.workspace}}/build/${TEST_DIR}
+          cmake --build ${{github.workspace}}/build/${TEST_DIR}
+          ctest --test-dir ${{github.workspace}}/build/${TEST_DIR} --output-on-failure
           rm -rf ${{github.workspace}}/build
       - name: cpu_clang
         env:
           CXX: clang++
           CC: clang
+          TEST_DIR: tests/cpu
         run: |
-          cmake -B ${{github.workspace}}/build -DENABLE_CUDA=OFF
-          cmake --build ${{github.workspace}}/build
-          ctest --test-dir ${{github.workspace}}/build/tests --output-on-failure
+          cmake -B ${{github.workspace}}/build/${TEST_DIR}
+          cmake --build ${{github.workspace}}/build/${TEST_DIR}
+          ctest --test-dir ${{github.workspace}}/build/${TEST_DIR} --output-on-failure
           rm -rf ${{github.workspace}}/build
       - name: gpu_gcc
         env:
@@ -37,11 +39,12 @@ jobs:
           CC: gcc
           NVCC_CCBIN: gcc
           CUDACXX: nvcc
+          TEST_DIR: tests/gpu
         run: |
           nvidia-smi
-          cmake -B ${{github.workspace}}/build -DENABLE_CPU=OFF
-          cmake --build ${{github.workspace}}/build
-          ctest --test-dir ${{github.workspace}}/build/tests --output-on-failure
+          cmake -B ${{github.workspace}}/build/${TEST_DIR}
+          cmake --build ${{github.workspace}}/build/${TEST_DIR}
+          ctest --test-dir ${{github.workspace}}/build/${TEST_DIR} --output-on-failure
           rm -rf ${{github.workspace}}/build
       - name: gpu_clang
         env:
@@ -49,9 +52,10 @@ jobs:
           CC: clang
           NVCC_CCBIN: clang
           CUDACXX: nvcc
+          TEST_DIR: tests/gpu
         run: |
           nvidia-smi
-          cmake -B ${{github.workspace}}/build -DENABLE_CPU=OFF
-          cmake --build ${{github.workspace}}/build
-          ctest --test-dir ${{github.workspace}}/build/tests --output-on-failure
+          cmake -B ${{github.workspace}}/build/${TEST_DIR}
+          cmake --build ${{github.workspace}}/build/${TEST_DIR}
+          ctest --test-dir ${{github.workspace}}/build/${TEST_DIR} --output-on-failure
           rm -rf ${{github.workspace}}/build
