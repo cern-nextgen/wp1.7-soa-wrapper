@@ -10,7 +10,7 @@ on:
 jobs:
   unit-tests:
     runs-on: cern-nextgen-h100
-    container: registry.cern.ch/ngt-wp1.7/wp1.7-soa-wrapper@sha256:35a13a0022a5106b2fc3c2dfbb1056d65b88f6266084eb0a9e348003bc17f883
+    container: registry.cern.ch/ngt-wp1.7/wp1.7-soa-wrapper@sha256:16432eae6635379637e67c4cc00334c46b6dce845b83da7e75fb754d24266897
     steps:
       - uses: actions/checkout@v4
       - name: cpu_gcc
