@@ -1,0 +1,25 @@
+PROJECT_NAME           = "memlayout"
+PROJECT_BRIEF          = "Minimal CPU/GPU header-only example library"
+OUTPUT_DIRECTORY       = @CMAKE_CURRENT_BINARY_DIR@
+
+INPUT                  = @CMAKE_SOURCE_DIR@/include \
+                         @CMAKE_CURRENT_SOURCE_DIR@/mainpage.md
+
+RECURSIVE              = YES
+GENERATE_HTML          = YES
+GENERATE_LATEX         = NO
+
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = NO
+EXTRACT_STATIC         = NO
+
+QUIET                  = NO
+WARN_IF_UNDOCUMENTED   = YES
+
+USE_MDFILE_AS_MAINPAGE = @CMAKE_CURRENT_SOURCE_DIR@/mainpage.md
+
+GENERATE_TREEVIEW      = YES
+FULL_PATH_NAMES        = NO
+STRIP_FROM_PATH        = @CMAKE_SOURCE_DIR@
+SOURCE_BROWSER         = YES
+INLINE_SOURCES         = YES

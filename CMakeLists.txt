@@ -8,3 +8,5 @@ add_library(memlayout INTERFACE)
 target_include_directories(memlayout INTERFACE include)
 
 add_subdirectory(tests EXCLUDE_FROM_ALL)
+
+add_subdirectory(docs EXCLUDE_FROM_ALL)
