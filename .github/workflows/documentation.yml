@@ -1,0 +1,55 @@
+name: Documentation
+
+on:
+  push:
+    branches: ["template"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build-docs:
+    runs-on: ubuntu-latest
+    container: registry.cern.ch/ngt-wp1.7/wp1.7-soa-wrapper@sha256:16432eae6635379637e67c4cc00334c46b6dce845b83da7e75fb754d24266897
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      - name: Build Docs
+        run: |
+          cmake -B ${{github.workspace}}/build
+          cmake --build ${{github.workspace}}/build/docs --target docs
+          mv ${{github.workspace}}/build/docs/html /root/
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docs-artifact
+          path: /root/html
+
+  deploy:
+    needs: build-docs
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v5
+        with:
+          name: docs-artifact
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+      - name: Upload Pages Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
