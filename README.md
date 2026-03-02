@@ -83,7 +83,7 @@ In Step 9, instead of running nvidia-smi, execute the commands in the section [B
 ## TODO
 - Default initializations
 - Choose between uninitialized, default initialized, and custom initialized arrays
-- Allow putting default values in skeleton struct definition, e.g. by template spcialization
+- Allow putting default values in skeleton struct definition, e.g. by template specialization
 - Aggregate initialization for arrays
 - Don't define closures twice
 - Return classical reference to struct in AoS case

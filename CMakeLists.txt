@@ -1,12 +1,15 @@
 cmake_minimum_required(VERSION 4.0)
 project(memlayout LANGUAGES CXX)
 
-#option(ENABLE_CPU "Build CPU tests" ON)
-#option(ENABLE_CUDA "Build CUDA tests" ON)
+option(BUILD_TESTING "Build unit tests" OFF)
+option(BUILD_DOCS "Build documentation" OFF)
 
-add_library(memlayout INTERFACE)
-target_include_directories(memlayout INTERFACE include)
+add_subdirectory(memlayout)
 
-add_subdirectory(tests EXCLUDE_FROM_ALL)
+if(BUILD_TESTING)
+  add_subdirectory(tests)
+endif()
 
-add_subdirectory(docs EXCLUDE_FROM_ALL)
+if(BUILD_DOCS)
+  add_subdirectory(docs)
+endif()

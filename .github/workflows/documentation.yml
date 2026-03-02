@@ -23,8 +23,8 @@ jobs:
         uses: actions/checkout@v4
       - name: Build Docs
         run: |
-          cmake -B ${{github.workspace}}/build
-          cmake --build ${{github.workspace}}/build/docs --target docs
+          cmake -B ${{github.workspace}}/build -DBUILD_DOCS=ON
+          cmake --build ${{github.workspace}}/build
           mv ${{github.workspace}}/build/docs/html /root/
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
