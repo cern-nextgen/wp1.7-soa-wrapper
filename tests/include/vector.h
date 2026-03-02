@@ -1,11 +1,11 @@
-#ifndef DEBUG_H
-#define DEBUG_H
+#ifndef VECTOR_H
+#define VECTOR_H
 
 #include <ostream>
 #include <vector>
 #include <span>
 
-namespace debug {
+namespace test {
 
 struct counters {
     void reset() { *this = counters(); }
@@ -54,4 +54,4 @@ struct vector : public std::vector<T>, public call_counter {
 
 }  // namespace debug
 
-#endif  // DEBUG_H
+#endif  // VECTOR_H
