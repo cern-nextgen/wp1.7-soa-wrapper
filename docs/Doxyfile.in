@@ -2,7 +2,7 @@ PROJECT_NAME           = "memlayout"
 PROJECT_BRIEF          = "Minimal CPU/GPU header-only example library"
 OUTPUT_DIRECTORY       = @CMAKE_CURRENT_BINARY_DIR@
 
-INPUT                  = @CMAKE_SOURCE_DIR@/include \
+INPUT                  = @CMAKE_SOURCE_DIR@/memlayout \
                          @CMAKE_CURRENT_SOURCE_DIR@/mainpage.md
 
 RECURSIVE              = YES
