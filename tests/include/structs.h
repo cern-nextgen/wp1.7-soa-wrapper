@@ -37,6 +37,6 @@ struct Gaussian {
     Container<uint16_t[3][3]> covariance;
 };
 
-}
+}  // namespace test
 
 #endif  // STRUCTS_H

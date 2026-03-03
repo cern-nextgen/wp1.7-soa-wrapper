@@ -260,7 +260,7 @@ struct Wrapper<Struct, const_pointer, Layout::soa> : public Struct<const_pointer
     constexpr Wrapper& operator-=(ptrdiff_t i) { return *this = *this - i; }
 };
 
-}  // namespace Wrapper
+}  // namespace memlayout
 
 #define WRAPPER_APPLY_UNARY(...)\
     template <class Function>\

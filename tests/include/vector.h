@@ -52,6 +52,6 @@ struct vector : public std::vector<T>, public call_counter {
     constexpr operator std::span<T>() { return { this->data(), this->data() + this->size() }; }
 };
 
-}  // namespace debug
+}  // namespace test
 
 #endif  // VECTOR_H

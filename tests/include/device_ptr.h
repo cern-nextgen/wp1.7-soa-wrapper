@@ -32,6 +32,6 @@ struct device_ptr {
     int N;
 };
 
-}  // namespace kernel
+}  // namespace test
 
 #endif  // DEVICE_PTR_H
