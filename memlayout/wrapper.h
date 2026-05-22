@@ -1,5 +1,7 @@
-#ifndef WRAPPER_H
-#define WRAPPER_H
+#ifndef MEMLAYOUT_H
+#define MEMLAYOUT_H
+
+namespace std { template<class T> struct iterator_traits; }
 
 namespace memlayout {
 
@@ -11,6 +13,14 @@ template <class T> using reference = T&;
 template <class T> using const_reference = const T&;
 template <class T> using pointer = T*;
 template <class T> using const_pointer = const T*;
+
+struct Dummy {};
+
+template<template <class> class Container>
+concept random_access_like = requires(Container<Dummy> it, size_t n) { it + n; it - n; it - it; it[n]; ++it; --it; *it; };
+
+template<template <class> class Iterator>
+concept non_const_iterator_like = requires(Iterator<Dummy> it) { *it = Dummy{}; };
 
 template <class ReturnType>
 struct RandomAccessAt {
@@ -68,6 +78,22 @@ struct CopyAssignment {
     constexpr Left& operator()(Left& left, const Right& right) const { return left = right; }
 };
 
+template <class ReturnType>
+struct Begin {
+    template <class... Args>
+    constexpr ReturnType operator()(Args& ...args) const { return {args.begin()...}; }
+    template <class... Args>
+    constexpr ReturnType operator()(const Args& ...args) const { return {args.cbegin()...}; }
+};
+
+template <class ReturnType>
+struct End {
+    template <class... Args>
+    constexpr ReturnType operator()(Args& ...args) const { return {args.end()...}; }
+    template <class... Args>
+    constexpr ReturnType operator()(const Args& ...args) const { return {args.cend()...}; }
+};
+
 enum class Layout { aos = 0, soa = 1 };
 
 template <
@@ -115,16 +141,19 @@ struct Wrapper<Struct, pointer, Layout::aos> {
     constexpr Wrapper operator-(ptrdiff_t i) const { return {data - i}; }
     constexpr ptrdiff_t operator-(const Wrapper& other) const { return {data - other.data}; }
 
-    constexpr Wrapper& operator++() { return {++data}; }
-    constexpr Wrapper& operator+=(ptrdiff_t i) { return {data += i}; }
-    constexpr Wrapper& operator--() { return {--data}; }
-    constexpr Wrapper& operator-=(ptrdiff_t i) { return {data -= i}; }
+    constexpr Wrapper operator++() { return {++data}; }
+    constexpr Wrapper operator+=(ptrdiff_t i) { return {data += i}; }
+    constexpr Wrapper operator--() { return {--data}; }
+    constexpr Wrapper operator-=(ptrdiff_t i) { return {data -= i}; }
 
     constexpr Wrapper<Struct, reference> operator[] (size_t i) { return data[i]; }
     constexpr Wrapper<Struct, const_reference> operator[] (size_t i) const { return data[i]; }
 
     constexpr Wrapper<Struct, reference> operator*() { return *data; }
     constexpr Wrapper<Struct, const_reference> operator*(ptrdiff_t) const { return *data; }
+
+    constexpr Wrapper<Struct, reference> operator->() { return operator[](0); }
+    constexpr Wrapper<Struct, const_reference> operator->() const { return operator[](0); }
 };
 
 template <
@@ -135,6 +164,10 @@ struct Wrapper<Struct, Container, Layout::soa> : public Struct<Container> {
     static constexpr Layout layout_type = Layout::soa;
     using Base = Struct<Container>;
     using Base::Base;
+    template <class T>
+    using iterator = typename Container<T>::iterator;
+    template <class T>
+    using const_iterator = typename Container<T>::const_iterator;
 
     constexpr Wrapper() = default;
     constexpr Wrapper(Base b) : Base{static_cast<Base&&>(b)} {}
@@ -148,6 +181,91 @@ struct Wrapper<Struct, Container, Layout::soa> : public Struct<Container> {
 
     constexpr Wrapper<Struct, reference> operator*() { return operator[](0); }
     constexpr Wrapper<Struct, const_reference> operator*(ptrdiff_t) const { return operator[](0); }
+
+    constexpr Wrapper<Struct, iterator> begin() { return Base::apply(Begin<Struct<iterator>>{}); }
+    constexpr Wrapper<Struct, iterator> end() { return Base::apply(End<Struct<iterator>>{}); }
+    constexpr Wrapper<Struct, const_iterator> cbegin() const { return Base::apply(Begin<Struct<const_iterator>>{}); }
+    constexpr Wrapper<Struct, const_iterator> cend() const { return Base::apply(End<Struct<const_iterator>>{}); }
+};
+
+template <
+    template <template <class> class> class Struct,
+    template <class> class Container
+>
+requires random_access_like<Container>
+struct Wrapper<Struct, Container, Layout::soa> : public Struct<Container> {
+    using iterator_category = std::iterator_traits<Container<Dummy>>::iterator_category;
+    using difference_type = ptrdiff_t;
+    using value_type = Wrapper<Struct, memlayout::value>;
+    using pointer = void;
+    using reference = Wrapper<Struct, memlayout::reference>;
+
+    static constexpr Layout layout_type = Layout::soa;
+    using Base = Struct<Container>;
+
+    constexpr Wrapper() = default;
+    constexpr Wrapper(Base b) : Base{static_cast<Base&&>(b)} {}
+
+    constexpr Wrapper<Struct, memlayout::reference> operator[] (size_t i) { return Base::apply(RandomAccessAt<Struct<memlayout::reference>>{i}); }
+    constexpr const Wrapper<Struct, memlayout::const_reference> operator[] (size_t i) const { return Base::apply(RandomAccessAt<Struct<memlayout::const_reference>>{i}); }
+
+    constexpr Wrapper<Struct, memlayout::reference> operator*() { return operator[](0); }
+    constexpr Wrapper<Struct, memlayout::const_reference> operator*() const { return operator[](0); }
+    constexpr Wrapper<Struct, memlayout::reference> operator->() { return operator[](0); }
+    constexpr Wrapper<Struct, memlayout::const_reference> operator->() const { return operator[](0); }
+
+    constexpr bool operator==(const Wrapper& other) const { return Base::apply(FirstMember{}) == other.apply(FirstMember{}); }
+    constexpr bool operator!=(const Wrapper& other) const { return !this->operator==(other); }
+    constexpr bool operator<(const Wrapper& other) const { return Base::apply(FirstMember{}) < other.apply(FirstMember{}); }
+
+    constexpr Wrapper operator+(ptrdiff_t i) const { return Base::apply(Advance<Base>{i}); }
+    constexpr Wrapper operator-(ptrdiff_t i) const { return operator+(-i); }
+    constexpr ptrdiff_t operator-(const Wrapper& other) const { return Base::apply(FirstMember{}) - other.apply(FirstMember{}); }
+
+    constexpr Wrapper& operator++() { Base::apply(PreIncrement<Base>{}); return *this; }
+    constexpr Wrapper& operator+=(ptrdiff_t i) { return *this = *this + i; }
+    constexpr Wrapper& operator--() { Base::apply(PreDecrement<Base>{}); return *this; }
+    constexpr Wrapper& operator-=(ptrdiff_t i) { return *this = *this - i; }
+};
+
+template <
+    template <template <class> class> class Struct,
+    template <class> class Container
+>
+requires (random_access_like<Container> && !non_const_iterator_like<Container>)
+struct Wrapper<Struct, Container, Layout::soa> : public Struct<Container> {
+    using iterator_category = std::iterator_traits<Container<Dummy>>::iterator_category;
+    using difference_type = ptrdiff_t;
+    using value_type = Wrapper<Struct, memlayout::value>;
+    using pointer = void;
+    using reference = Wrapper<Struct, memlayout::const_reference>;
+
+    static constexpr Layout layout_type = Layout::soa;
+    using Base = Struct<Container>;
+
+    constexpr Wrapper() = default;
+    constexpr Wrapper(Base b) : Base{static_cast<Base&&>(b)} {}
+    
+    template <template <class> class OtherContainer>
+    requires random_access_like<OtherContainer>
+    constexpr Wrapper(const Struct<OtherContainer>& other) : Base(other.apply(AggregateConstructor<Base>{})) {}
+
+    constexpr Wrapper<Struct, const_reference> operator[] (size_t i) const { return Base::apply(RandomAccessAt<Struct<const_reference>>{i}); }
+    constexpr Wrapper<Struct, const_reference> operator*() const { return operator[](0); }
+    constexpr Wrapper<Struct, const_reference> operator->() const { return operator[](0); }
+
+    constexpr bool operator==(const Wrapper& other) const { return Base::apply(FirstMember{}) == other.apply(FirstMember{}); }
+    constexpr bool operator!=(const Wrapper& other) const { return !this->operator==(other); }
+    constexpr bool operator<(const Wrapper& other) const { return Base::apply(FirstMember{}) < other.apply(FirstMember{}); }
+
+    constexpr Wrapper operator+(ptrdiff_t i) const { return Base::apply(Advance<Base>{i}); }
+    constexpr Wrapper operator-(ptrdiff_t i) const { return operator+(-i); }
+    constexpr ptrdiff_t operator-(const Wrapper& other) const { return Base::apply(FirstMember{}) - other.apply(FirstMember{}); }
+
+    constexpr Wrapper& operator++() { Base::apply(PreIncrement<Base>{}); return *this; }
+    constexpr Wrapper& operator+=(ptrdiff_t i) { return *this = *this + i; }
+    constexpr Wrapper& operator--() { Base::apply(PreDecrement<Base>{}); return *this; }
+    constexpr Wrapper& operator-=(ptrdiff_t i) { return *this = *this - i; }
 };
 
 template <template <template <class> class> class Struct>
@@ -205,72 +323,17 @@ struct Wrapper<Struct, const_reference, Layout::soa> : public Struct<const_refer
     constexpr const_pointer<Wrapper<Struct, const_reference>> operator->() const { return this; }
 };
 
-template <template <template <class> class> class Struct>
-struct Wrapper<Struct, pointer, Layout::soa> : public Struct<pointer> {
-    using Base = Struct<pointer>;
-
-    constexpr Wrapper() = default;
-    constexpr Wrapper(Base b) : Base{static_cast<Base&&>(b)} {}
-
-    constexpr Wrapper<Struct, reference> operator[] (size_t i) { return Base::apply(RandomAccessAt<Struct<reference>>{i}); }
-    constexpr const Wrapper<Struct, const_reference> operator[] (size_t i) const { return Base::apply(RandomAccessAt<Struct<const_reference>>{i}); }
-
-    constexpr Wrapper<Struct, reference> operator*() { return operator[](0); }
-    constexpr Wrapper<Struct, const_reference> operator*() const { return operator[](0); }
-    constexpr Wrapper<Struct, reference> operator->() { return operator[](0); }
-    constexpr Wrapper<Struct, const_reference> operator->() const { return operator[](0); }
-
-    constexpr bool operator==(const Wrapper& other) const { return Base::apply(FirstMember{}) == other.apply(FirstMember{}); }
-    constexpr bool operator!=(const Wrapper& other) const { return !this->operator==(other); }
-    constexpr bool operator<(const Wrapper& other) const { return Base::apply(FirstMember{}) < other.apply(FirstMember{}); }
-
-    constexpr Wrapper operator+(ptrdiff_t i) const { return Base::apply(Advance<Base>{i}); }
-    constexpr Wrapper operator-(ptrdiff_t i) const { return operator+(-i); }
-    constexpr ptrdiff_t operator-(const Wrapper& other) const { return Base::apply(FirstMember{}) - other.apply(FirstMember{}); }
-
-    constexpr Wrapper& operator++() { Base::apply(PreIncrement<Base>{}); return *this; }
-    constexpr Wrapper& operator+=(ptrdiff_t i) { return *this = *this + i; }
-    constexpr Wrapper& operator--() { Base::apply(PreDecrement<Base>{}); return *this; }
-    constexpr Wrapper& operator-=(ptrdiff_t i) { return *this = *this - i; }
-};
-
-template <template <template <class> class> class Struct>
-struct Wrapper<Struct, const_pointer, Layout::soa> : public Struct<const_pointer> {
-    using Base = Struct<const_pointer>;
-
-    constexpr Wrapper() = default;
-    constexpr Wrapper(Base b) : Base{static_cast<Base&&>(b)} {}
-    constexpr Wrapper(const Struct<pointer>& other) : Base(other.apply(AggregateConstructor<Base>{})) {}
-
-    constexpr Wrapper<Struct, const_reference> operator[] (size_t i) const { return Base::apply(RandomAccessAt<Struct<const_reference>>{i}); }
-    constexpr Wrapper<Struct, const_reference> operator*() const { return operator[](0); }
-    constexpr Wrapper<Struct, const_reference> operator->() const { return operator[](0); }
-
-    constexpr bool operator==(const Wrapper& other) const { return Base::apply(FirstMember{}) == other.apply(FirstMember{}); }
-    constexpr bool operator!=(const Wrapper& other) const { return !this->operator==(other); }
-    constexpr bool operator<(const Wrapper& other) const { return Base::apply(FirstMember{}) < other.apply(FirstMember{}); }
-
-    constexpr Wrapper operator+(ptrdiff_t i) const { return Base::apply(Advance<Base>{i}); }
-    constexpr Wrapper operator-(ptrdiff_t i) const { return operator+(-i); }
-    constexpr ptrdiff_t operator-(const Wrapper& other) const { return Base::apply(FirstMember{}) - other.apply(FirstMember{}); }
-
-    constexpr Wrapper& operator++() { Base::apply(PreIncrement<Base>{}); return *this; }
-    constexpr Wrapper& operator+=(ptrdiff_t i) { return *this = *this + i; }
-    constexpr Wrapper& operator--() { Base::apply(PreDecrement<Base>{}); return *this; }
-    constexpr Wrapper& operator-=(ptrdiff_t i) { return *this = *this - i; }
-};
-
 }  // namespace memlayout
 
-#define WRAPPER_APPLY_UNARY(...)\
+#define MEMLAYOUT_APPLY_UNARY(...)\
     template <class Function>\
     constexpr auto apply(Function&& f) { return f(__VA_ARGS__); }\
     template <class Function>\
     constexpr auto apply(Function&& f) const { return f(__VA_ARGS__); }\
 
-#define WRAPPER_EXPAND(m) f(m, other.m)
+#define MEMLAYOUT_EXPAND(m) f(m, other.m)
 
-#define WRAPPER_APPLY_BINARY(STRUCT_NAME, ...)\
+#define MEMLAYOUT_APPLY_BINARY(STRUCT_NAME, ...)\
     template <template <class> class other_Container, class Function>\
     constexpr STRUCT_NAME apply(STRUCT_NAME<other_Container>& other, Function&& f) { return {__VA_ARGS__}; }\
     template <template <class> class other_Container, class Function>\
@@ -280,4 +343,4 @@ struct Wrapper<Struct, const_pointer, Layout::soa> : public Struct<const_pointer
     template <template <class> class other_Container, class Function>\
     constexpr STRUCT_NAME apply(const STRUCT_NAME<other_Container>& other, Function&& f) const { return {__VA_ARGS__}; }\
 
-#endif  // WRAPPER_H
+#endif  // MEMLAYOUT_H
