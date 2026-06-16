@@ -156,6 +156,33 @@ struct Wrapper<Struct, pointer, Layout::aos> {
     constexpr Wrapper<Struct, const_reference> operator->() const { return operator[](0); }
 };
 
+template <template <template <class> class> class Struct>
+struct Wrapper<Struct, const_pointer, Layout::aos> {
+    static constexpr Layout layout_type = Layout::aos;
+
+    const_pointer<Struct<value>> data;
+    using Data = const_pointer<Struct<value>>;
+
+    operator const Data&() const { return data; }
+
+    constexpr bool operator==(const Wrapper& other) const { return data == other.data; }
+    constexpr bool operator!=(const Wrapper& other) const { return data != other.data; }
+    constexpr bool operator<(const Wrapper& other) const { return data < other.data; }
+
+    constexpr Wrapper operator+(ptrdiff_t i) const { return {data + i}; }
+    constexpr Wrapper operator-(ptrdiff_t i) const { return {data - i}; }
+    constexpr ptrdiff_t operator-(const Wrapper& other) const { return {data - other.data}; }
+
+    constexpr Wrapper operator++() { return {++data}; }
+    constexpr Wrapper operator+=(ptrdiff_t i) { return {data += i}; }
+    constexpr Wrapper operator--() { return {--data}; }
+    constexpr Wrapper operator-=(ptrdiff_t i) { return {data -= i}; }
+
+    constexpr Wrapper<Struct, const_reference> operator[] (size_t i) const { return data[i]; }
+    constexpr Wrapper<Struct, const_reference> operator*() const { return *data; }
+    constexpr Wrapper<Struct, const_reference> operator->() const { return operator[](0); }
+};
+
 template <
     template <template <class> class> class Struct,
     template <class> class Container

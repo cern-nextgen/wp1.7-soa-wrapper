@@ -1,6 +1,8 @@
 #ifndef STRUCTS_H
 #define STRUCTS_H
 
+#include <algorithm>
+
 #include "memlayout/wrapper.h"
 
 namespace test {
@@ -12,6 +14,16 @@ struct Point2D {
 
     Container<int32_t> x, y;
     constexpr int32_t abs2() const { return x * x + y * y; }
+};
+
+void swap(Point2D<memlayout::reference> a, Point2D<memlayout::reference> b) {
+    std::swap(a.x, b.x);
+    std::swap(a.y, b.y);
+}
+
+struct Comp {
+    using cref = const memlayout::Wrapper<Point2D, memlayout::const_reference>;
+    constexpr bool operator()(cref& p, cref& q) const { return p.x < q.x; }
 };
 
 template <template <class> class Container>

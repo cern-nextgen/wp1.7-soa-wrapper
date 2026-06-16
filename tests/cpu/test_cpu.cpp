@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <vector>
 #include <span>
 
@@ -157,4 +158,56 @@ TEST(VectorToSpan, SoA) {
     uint32_t sum = compute_sum(5, w_span);
     uint32_t expected_sum = 45;
     EXPECT_EQ(expected_sum, sum);
+}
+
+TEST(Iterators, AoS) {
+    memlayout::Wrapper<test::Point2D, std::vector, memlayout::Layout::aos> w{
+        {0, 5}, {1, 6}, {2, 7}, {3, 8}, {4, 9}
+    };
+    uint32_t expected = 2;
+    for (memlayout::Wrapper<test::Point2D, memlayout::reference> p : w) {
+        p.x = expected;
+        p.y = expected;
+    }
+    for (memlayout::Wrapper<test::Point2D, memlayout::const_reference> p : w) {
+        EXPECT_EQ(p.x , expected);
+        EXPECT_EQ(p.y , expected);
+    }
+}
+TEST(Iterators, SoA) {
+    memlayout::Wrapper<test::Point2D, std::vector, memlayout::Layout::soa> w{
+        {{0, 1, 2, 3, 4}, {5, 6, 7, 8, 9}}
+    };
+    uint32_t expected = 2;
+    for (memlayout::Wrapper<test::Point2D, memlayout::reference> p : w) {
+        p.x = expected;
+        p.y = expected;
+    }
+    for (memlayout::Wrapper<test::Point2D, memlayout::const_reference> p : w) {
+        EXPECT_EQ(p.x , expected);
+        EXPECT_EQ(p.y , expected);
+    }
+}
+
+TEST(Sort, AoS) {
+    memlayout::Wrapper<test::Point2D, std::vector, memlayout::Layout::aos> w{
+        {9, 5}, {1, 6}, {5, 7}, {3, 8}, {2, 9}
+    };
+    std::sort(w.begin(), w.end(), test::Comp{});
+    EXPECT_EQ(w[0].y, 6);
+    EXPECT_EQ(w[1].y, 9);
+    EXPECT_EQ(w[2].y, 8);
+    EXPECT_EQ(w[3].y, 7);
+    EXPECT_EQ(w[4].y, 5);
+}
+TEST(Sort, SoA) {
+    memlayout::Wrapper<test::Point2D, std::vector, memlayout::Layout::soa> w{
+        {{9, 1, 5, 3, 2}, {5, 6, 7, 8, 9}}
+    };
+    std::sort(w.begin(), w.end(), test::Comp{});
+    EXPECT_EQ(w[0].y, 6);
+    EXPECT_EQ(w[1].y, 9);
+    EXPECT_EQ(w[2].y, 8);
+    EXPECT_EQ(w[3].y, 7);
+    EXPECT_EQ(w[4].y, 5);
 }
