@@ -9,8 +9,7 @@ namespace test {
 
 template <template <class> class Container>
 struct Point2D {
-    MEMLAYOUT_APPLY_UNARY(x, y)
-    MEMLAYOUT_APPLY_BINARY(Point2D, MEMLAYOUT_EXPAND(x), MEMLAYOUT_EXPAND(y))
+    MEMLAYOUT_APPLY(Point2D, x, y)
 
     Container<int32_t> x, y;
     constexpr int32_t abs2() const { return x * x + y * y; }
@@ -28,8 +27,7 @@ struct Comp {
 
 template <template <class> class Container>
 struct Point3D {
-    MEMLAYOUT_APPLY_UNARY(point2d, z)
-    MEMLAYOUT_APPLY_BINARY(Point3D, MEMLAYOUT_EXPAND(point2d), MEMLAYOUT_EXPAND(z))
+    MEMLAYOUT_APPLY(Point3D, point2d, z)
 
     memlayout::Wrapper<Point2D, Container> point2d;
     Container<int32_t> z;
@@ -42,8 +40,7 @@ struct Point3D {
 
 template <template <class> class Container>
 struct Gaussian {
-    MEMLAYOUT_APPLY_UNARY(mean, covariance)
-    MEMLAYOUT_APPLY_BINARY(Gaussian, MEMLAYOUT_EXPAND(mean), MEMLAYOUT_EXPAND(covariance))
+    MEMLAYOUT_APPLY(Gaussian, mean, covariance)
 
     memlayout::Wrapper<Point3D, Container> mean;
     Container<uint16_t[3][3]> covariance;
